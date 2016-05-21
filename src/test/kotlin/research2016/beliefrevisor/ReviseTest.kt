@@ -3,6 +3,7 @@ package research2016.beliefrevisor
 import org.junit.Test
 import research2016.propositionallogic.And
 import research2016.propositionallogic.BasicProposition
+import research2016.propositionallogic.Contradiction
 import research2016.propositionallogic.Models
 import research2016.propositionallogic.Not
 import research2016.propositionallogic.Or
@@ -16,9 +17,12 @@ import research2016.propositionallogic.models
  */
 class ReviseTest()
 {
-    fun reviseTest(beliefState:Proposition,sentence:Proposition,expected:Models)
+    fun reviseTest(beliefState:Set<Proposition>,sentence:Proposition,situationSorterFactory:(Set<Proposition>)->SituationSorter,expected:Models)
     {
-        val actual = revise(beliefState,sentence).models
+        val actual = (TotalPreOrderBeliefRevisionStrategy(situationSorterFactory)
+            .revise(beliefState,sentence)
+            .joinWithOrs() ?: Contradiction)
+            .models
         println("actual: $actual")
         println("expected: $expected")
         assert(actual == expected)
@@ -30,10 +34,10 @@ class ReviseTest()
     @Test
     fun reviseSubSetTest()
     {
-        val beliefState = Tautology
+        val beliefState = setOf(Tautology)
         val sentence = And(And(BasicProposition.make("p"),BasicProposition.make("q")),BasicProposition.make("r"))
-        val expected = And(beliefState,sentence).models
-        reviseTest(beliefState,sentence,expected)
+        val expected = And(beliefState.joinWithOrs() ?: Contradiction,sentence).models
+        reviseTest(beliefState,sentence,{HammingDistanceSituationSorter(it)},expected)
     }
 
     /**
@@ -42,10 +46,10 @@ class ReviseTest()
     @Test
     fun reviseIntersectTest()
     {
-        val beliefState = Or(BasicProposition.make("p"),BasicProposition.make("q"))
+        val beliefState = setOf(Or(BasicProposition.make("p"),BasicProposition.make("q")))
         val sentence = Or(BasicProposition.make("q"),BasicProposition.make("r"))
-        val expected = And(beliefState,sentence).models
-        reviseTest(beliefState,sentence,expected)
+        val expected = And(beliefState.joinWithOrs() ?: Contradiction,sentence).models
+        reviseTest(beliefState,sentence,{HammingDistanceSituationSorter(it)},expected)
     }
 
     /**
@@ -54,9 +58,18 @@ class ReviseTest()
     @Test
     fun reviseContradictionTest()
     {
-        val beliefState = And(BasicProposition.make("p"),BasicProposition.make("q"))
-        val sentence = And(Tautology,Not(beliefState))
+        val beliefState = setOf(And(BasicProposition.make("p"),BasicProposition.make("q")))
+        val sentence = And(Tautology,Not(beliefState.joinWithOrs() ?: Contradiction))
         val expected = Xor(BasicProposition.make("p"),BasicProposition.make("q")).models
-        reviseTest(beliefState,sentence,expected)
+        reviseTest(beliefState,sentence,{HammingDistanceSituationSorter(it)},expected)
+    }
+
+    fun Iterable<Proposition>.joinWithOrs():Proposition?
+    {
+        return fold<Proposition,Proposition?>(null)
+        {
+            initial,next ->
+            initial?.let {Or(initial,next)} ?: next
+        }
     }
 }
