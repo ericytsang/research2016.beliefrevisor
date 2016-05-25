@@ -1,12 +1,12 @@
 package research2016.beliefrevisor
 
-import research2016.propositionallogic.Contradiction
 import research2016.propositionallogic.Proposition
 import research2016.propositionallogic.Situation
 import research2016.propositionallogic.basicPropositions
 import research2016.propositionallogic.evaluate
 import research2016.propositionallogic.generateFrom
 import research2016.propositionallogic.makeFrom
+import java.util.Comparator
 
 interface BeliefRevisionStrategy
 {
@@ -21,7 +21,7 @@ interface BeliefRevisionStrategy
  * be given the initial belief state as an argument, and must return the
  * appropriate [SituationSorter] which will be used to sort the [Situation]s.
  */
-class TotalPreOrderBeliefRevisionStrategy(val situationSorterFactory:(Set<Proposition>)->SituationSorter):BeliefRevisionStrategy
+class TotalPreOrderBeliefRevisionStrategy(val situationSorterFactory:(Set<Proposition>)->Comparator<Situation>):BeliefRevisionStrategy
 {
     override fun revise(beliefState:Set<Proposition>,sentence:Proposition):Set<Proposition>
     {
@@ -37,6 +37,7 @@ class TotalPreOrderBeliefRevisionStrategy(val situationSorterFactory:(Set<Propos
             .sortedWith(situationSorter)
 
         val nearestSituations = orderedSentenceModels
+
             // keep only the ones with the least distance according to the sorter
             .filter {situationSorter.compare(orderedSentenceModels.first(),it) == 0}
 

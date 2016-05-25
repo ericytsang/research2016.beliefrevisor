@@ -10,7 +10,7 @@ fun main(args:Array<String>)
         val beliefState:Proposition = Proposition.makeFrom(args[0])
         val sentence:Proposition = Proposition.makeFrom(args[1])
 
-        val beliefRevisor = TotalPreOrderBeliefRevisionStrategy({HammingDistanceSituationSorter(it)})
+        val beliefRevisor = TotalPreOrderBeliefRevisionStrategy({HammingDistanceComparator(it)})
 
         println(beliefRevisor.revise(setOf(beliefState),sentence))
     }
