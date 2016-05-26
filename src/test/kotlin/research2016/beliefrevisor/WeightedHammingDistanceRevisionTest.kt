@@ -7,7 +7,7 @@ import java.util.*
 /**
  * Created by surpl on 5/15/2016.
  */
-class HammingDistanceRevisionTest():RevisionTest()
+class WeightedHammingDistanceRevisionTest():RevisionTest()
 {
     /**
      * test case where sentence models are a subset of belief state models.
@@ -18,7 +18,7 @@ class HammingDistanceRevisionTest():RevisionTest()
         val beliefState = setOf(Tautology)
         val sentence = p and q and r
         val expected = (p and q and r).models
-        reviseTest(beliefState,sentence,{HammingDistanceComparator(it)},expected)
+        reviseTest(beliefState,sentence,{WeightedHammingDistanceComparator(it,mapOf(p to 3,q to 2,r to 1))},expected)
     }
 
     /**
@@ -30,7 +30,7 @@ class HammingDistanceRevisionTest():RevisionTest()
         val beliefState = setOf(p or q)
         val sentence = q or r
         val expected = ((p or q) and (q or r)).models
-        reviseTest(beliefState,sentence,{HammingDistanceComparator(it)},expected)
+        reviseTest(beliefState,sentence,{WeightedHammingDistanceComparator(it,mapOf(p to 3,q to 2,r to 1))},expected)
     }
 
     /**
@@ -41,7 +41,7 @@ class HammingDistanceRevisionTest():RevisionTest()
     {
         val beliefState = setOf(p and q)
         val sentence = And.make(beliefState.toList()).not
-        val expected = Xor(p,q).models
-        reviseTest(beliefState,sentence,{HammingDistanceComparator(it)},expected)
+        val expected = (p and q.not).models
+        reviseTest(beliefState,sentence,{WeightedHammingDistanceComparator(it,mapOf(p to 3,q to 2,r to 1))},expected)
     }
 }
