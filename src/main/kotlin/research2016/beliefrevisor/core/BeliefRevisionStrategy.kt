@@ -1,4 +1,4 @@
-package research2016.beliefrevisor
+package research2016.beliefrevisor.core
 
 import research2016.propositionallogic.Proposition
 import research2016.propositionallogic.Situation
@@ -42,6 +42,6 @@ class TotalPreOrderBeliefRevisionStrategy(val situationSorterFactory:(Set<Propos
             .filter {situationSorter.compare(orderedSentenceModels.first(),it) == 0}
 
         // convert into a proposition and return
-        return nearestSituations.map {Proposition.Companion.makeFrom(it)}.toSet()
+        return nearestSituations.map {Proposition.makeFrom(it)}.toSet()
     }
 }

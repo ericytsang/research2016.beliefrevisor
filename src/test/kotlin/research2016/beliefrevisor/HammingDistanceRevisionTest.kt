@@ -1,6 +1,7 @@
 package research2016.beliefrevisor
 
 import org.junit.Test
+import research2016.beliefrevisor.core.HammingDistanceComparator
 import research2016.propositionallogic.*
 import java.util.*
 

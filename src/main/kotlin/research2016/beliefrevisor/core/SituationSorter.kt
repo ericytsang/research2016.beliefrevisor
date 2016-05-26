@@ -1,4 +1,4 @@
-package research2016.beliefrevisor
+package research2016.beliefrevisor.core
 
 import research2016.propositionallogic.*
 import java.util.Comparator
