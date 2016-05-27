@@ -69,15 +69,12 @@ class Gui():Application()
         borderPane.top = VBox()
             .apply()
             {
-                val buttonFlowPane = HBox(addToBeliefStateButton,addForBeliefRevisionButton)
-                buttonFlowPane.spacing = Dimens.KEYLINE_SMALL.toDouble()
+                val buttonPanel = HBox(addToBeliefStateButton,addForBeliefRevisionButton)
+                buttonPanel.spacing = Dimens.KEYLINE_SMALL.toDouble()
 
-                val spacer = Region()
-                spacer.prefWidth = Dimens.KEYLINE_SMALL.toDouble()
-                spacer.prefHeight = Dimens.KEYLINE_SMALL.toDouble()
-
+                spacing = Dimens.KEYLINE_SMALL.toDouble()
                 padding = Insets(Dimens.KEYLINE_SMALL.toDouble())
-                children.addAll(sentenceTextField,spacer,buttonFlowPane)
+                children.addAll(sentenceTextField,buttonPanel)
             }
 
         borderPane.center = HBox()
