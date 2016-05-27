@@ -2,11 +2,12 @@ package research2016.beliefrevisor.gui
 
 import javafx.application.Application
 import javafx.geometry.Insets
+import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.control.Button
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.HBox
-import javafx.scene.layout.Region
+import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.stage.Stage
 
@@ -21,6 +22,8 @@ class Gui():Application()
     {
         const val ADD_TO_BELIEF_STATE_BUTTON_TEXT = "Add to Initial Belief State"
         const val ADD_FOR_BELIEF_REVISION_BUTTON_TEXT = "Add for Belief Revision"
+        const val PERFORM_REVISION_BUTTON_TEXT = "Revise"
+        const val COMMIT_REVISION_BUTTON_TEXT = "Commit"
         const val INITIAL_BELIEF_STATE_LABEL_TEXT = "Initial Belief State"
         const val REVISION_SENTENCES_LABEL_TEXT = "Sentences for Revision"
         const val RESULTING_BELIEF_STATE_LABEL_TEXT = "Resulting Belief State"
@@ -46,6 +49,12 @@ class Gui():Application()
     val revisionSentencesDisplay = BeliefStateOutputPanel(REVISION_SENTENCES_LABEL_TEXT)
 
     val resultingBeliefStateDisplay = BeliefStateOutputPanel(RESULTING_BELIEF_STATE_LABEL_TEXT)
+
+    val revisionConfigurationPanel = RevisionConfigurationPanel()
+
+    val performRevisionButton = Button(PERFORM_REVISION_BUTTON_TEXT)
+
+    val commitRevisionButton = Button(COMMIT_REVISION_BUTTON_TEXT)
 
     override fun start(primaryStage:Stage)
     {
@@ -77,6 +86,20 @@ class Gui():Application()
                 spacing = Dimens.KEYLINE_SMALL.toDouble()
                 padding = Insets(Dimens.KEYLINE_SMALL.toDouble())
                 children.addAll(initialBeliefStateDisplay,revisionSentencesDisplay,resultingBeliefStateDisplay)
+            }
+
+        borderPane.bottom = HBox()
+            .apply()
+            {
+                val buttonPanel = HBox(performRevisionButton,commitRevisionButton)
+                buttonPanel.spacing = Dimens.KEYLINE_SMALL.toDouble()
+                buttonPanel.alignment = Pos.BOTTOM_RIGHT
+
+                HBox.setHgrow(revisionConfigurationPanel,Priority.ALWAYS)
+
+                spacing = Dimens.KEYLINE_SMALL.toDouble()
+                padding = Insets(Dimens.KEYLINE_SMALL.toDouble())
+                children.addAll(revisionConfigurationPanel,buttonPanel)
             }
 
         // display the window
