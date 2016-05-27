@@ -14,12 +14,12 @@ interface BeliefRevisionStrategy
 }
 
 /**
- * class that uses a [SituationSorter] to order [Situation]s in order to do
- * create the "total pre-order" for the belief revision.
+ * class that uses a [Comparator] to order [Situation]s in order to do create
+ * the "total pre-order" for the belief revision.
  *
- * the [situationSorterFactory] is used to create the [SituationSorter]. it will
- * be given the initial belief state as an argument, and must return the
- * appropriate [SituationSorter] which will be used to sort the [Situation]s.
+ * the [situationSorterFactory] is used to create the [Comparator]. it will be
+ * given the initial belief state as an argument, and must return the
+ * appropriate [Comparator] which will be used to sort the [Situation]s.
  */
 class TotalPreOrderBeliefRevisionStrategy(val situationSorterFactory:(Set<Proposition>)->Comparator<Situation>):BeliefRevisionStrategy
 {
