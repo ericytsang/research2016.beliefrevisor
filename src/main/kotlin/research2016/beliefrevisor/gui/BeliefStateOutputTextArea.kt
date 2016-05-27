@@ -17,14 +17,14 @@ class BeliefStateOutputPanel(labelText:String):VBox()
     companion object
     {
         /**
-         * [List] of [DisplayMode]s used in the [displayModeSetting] control.
+         * [List] of [DisplayModeOption]s used in the [displayModeComboBox] control.
          */
-        private val displayModeOptions:List<DisplayMode> = run()
+        private val displayModeOptions:List<DisplayModeOption> = run()
         {
-            val cnfOption = DisplayMode("Conjunctive Normal Form",{proposition:Proposition -> proposition})
-            val dnfOption = DisplayMode("Disjunctive Normal Form",{proposition:Proposition -> proposition})
-            val defaultOption = DisplayMode("Default",{proposition:Proposition -> Contradiction})
-            val simplifiedOption = DisplayMode("Simplified",{proposition:Proposition -> Tautology})
+            val cnfOption = DisplayModeOption("Conjunctive Normal Form",{proposition:Proposition -> proposition})
+            val dnfOption = DisplayModeOption("Disjunctive Normal Form",{proposition:Proposition -> proposition})
+            val defaultOption = DisplayModeOption("Default",{proposition:Proposition -> Contradiction})
+            val simplifiedOption = DisplayModeOption("Simplified",{proposition:Proposition -> Tautology})
             return@run listOf(defaultOption,simplifiedOption,cnfOption,dnfOption)
         }
     }
@@ -48,7 +48,7 @@ class BeliefStateOutputPanel(labelText:String):VBox()
     /**
      * [ComboBox] for user to select how [propositions] should be displayed.
      */
-    private val displayModeSetting = ComboBox<DisplayMode>()
+    private val displayModeComboBox = ComboBox<DisplayModeOption>()
         .apply()
         {
             valueProperty().addListener(InvalidationListener()
@@ -61,14 +61,14 @@ class BeliefStateOutputPanel(labelText:String):VBox()
 
     /**
      * [TextArea] used to display all the [propositions] in the format specified
-     * by the [DisplayMode] mode selected in the [displayModeSetting] control.
+     * by the [DisplayModeOption] mode selected in the [displayModeComboBox] control.
      */
     private val beliefSetTextArea = BeliefStateOutputTextArea()
 
     init
     {
         // add children to layout...
-        children.addAll(label,beliefSetTextArea,displayModeSetting)
+        children.addAll(label,beliefSetTextArea,displayModeComboBox)
 
         // configure layout...
         spacing = Dimens.KEYLINE_SMALL.toDouble()
@@ -77,11 +77,11 @@ class BeliefStateOutputPanel(labelText:String):VBox()
 
     /**
      * computes how [Proposition]s should be displayed based on the current
-     * [propositions] and the selected [DisplayMode].
+     * [propositions] and the selected [DisplayModeOption].
      */
     private fun updateDisplay()
     {
-        val transform = displayModeSetting.value.transform
+        val transform = displayModeComboBox.value.transform
         val displayedPropositions = propositions.map {transform(it)}.toSet()
         Platform.runLater()
         {
@@ -90,11 +90,11 @@ class BeliefStateOutputPanel(labelText:String):VBox()
     }
 
     /**
-     * [name] is displayed directly in the [displayModeSetting] control.
+     * [name] is displayed directly in the [displayModeComboBox] control.
      * [transform] is used to convert each element in [propositions] into
      * another to be displayed in the [beliefSetTextArea].
      */
-    private class DisplayMode(val name:String,val transform:(Proposition)->Proposition)
+    private class DisplayModeOption(val name:String,val transform:(Proposition)->Proposition)
     {
         override fun toString():String = name
     }
