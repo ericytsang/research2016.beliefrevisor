@@ -7,7 +7,6 @@ import javafx.scene.control.ComboBox
 import javafx.scene.layout.HBox
 import javafx.scene.layout.Region
 import javafx.scene.layout.StackPane
-import javafx.scene.layout.VBox
 import research2016.beliefrevisor.core.HammingDistanceComparator
 import research2016.propositionallogic.Proposition
 import research2016.propositionallogic.Situation
@@ -57,6 +56,7 @@ class RevisionConfigurationPanel:HBox()
                 revisionOperatorSettings.children.add(value.operatorSettings)
             })
             items = ObservableListWrapper(revisionOperatorOptions)
+            value = HammingDistanceRevisionOperatorOption()
         }
 
     init
