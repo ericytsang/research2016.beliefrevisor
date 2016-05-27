@@ -21,6 +21,9 @@ class Gui():Application()
     {
         const val ADD_TO_BELIEF_STATE_BUTTON_TEXT = "Add to Initial Belief State"
         const val ADD_FOR_BELIEF_REVISION_BUTTON_TEXT = "Add for Belief Revision"
+        const val INITIAL_BELIEF_STATE_LABEL_TEXT = "Initial Belief State"
+        const val REVISION_SENTENCES_LABEL_TEXT = "Sentences for Revision"
+        const val RESULTING_BELIEF_STATE_LABEL_TEXT = "Resulting Belief State"
     }
 
     val sentenceTextField = InputPane()
@@ -37,6 +40,12 @@ class Gui():Application()
      * revision.
      */
     val addForBeliefRevisionButton = Button(ADD_FOR_BELIEF_REVISION_BUTTON_TEXT)
+
+    val initialBeliefStateDisplay = BeliefStateOutputPanel(INITIAL_BELIEF_STATE_LABEL_TEXT)
+
+    val revisionSentencesDisplay = BeliefStateOutputPanel(REVISION_SENTENCES_LABEL_TEXT)
+
+    val resultingBeliefStateDisplay = BeliefStateOutputPanel(RESULTING_BELIEF_STATE_LABEL_TEXT)
 
     override fun start(primaryStage:Stage)
     {
@@ -60,6 +69,14 @@ class Gui():Application()
 
                 padding = Insets(Dimens.KEYLINE_SMALL.toDouble())
                 children.addAll(sentenceTextField,spacer,buttonFlowPane)
+            }
+
+        borderPane.center = HBox()
+            .apply()
+            {
+                spacing = Dimens.KEYLINE_SMALL.toDouble()
+                padding = Insets(Dimens.KEYLINE_SMALL.toDouble())
+                children.addAll(initialBeliefStateDisplay,revisionSentencesDisplay,resultingBeliefStateDisplay)
             }
 
         // display the window
