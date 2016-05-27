@@ -3,10 +3,12 @@ package research2016.beliefrevisor.gui
 import javafx.application.Application
 import javafx.geometry.Insets
 import javafx.scene.Scene
+import javafx.scene.control.Button
 import javafx.scene.layout.BorderPane
+import javafx.scene.layout.HBox
+import javafx.scene.layout.Region
+import javafx.scene.layout.VBox
 import javafx.stage.Stage
-import research2016.beliefrevisor.gui.CSS
-
 
 fun main(args:Array<String>)
 {
@@ -15,6 +17,27 @@ fun main(args:Array<String>)
 
 class Gui():Application()
 {
+    companion object
+    {
+        const val ADD_TO_BELIEF_STATE_BUTTON_TEXT = "Add to Initial Belief State"
+        const val ADD_FOR_BELIEF_REVISION_BUTTON_TEXT = "Add for Belief Revision"
+    }
+
+    val sentenceTextField = InputPane()
+
+    /**
+     * button that when clicked, indicates that the user wants to add the text
+     * from [sentenceTextField] to belief state.
+     */
+    val addToBeliefStateButton = Button(ADD_TO_BELIEF_STATE_BUTTON_TEXT)
+
+    /**
+     * button that when clicked, indicates that the user wants to add the text
+     * from [sentenceTextField] to the [Set] of sentences used for belief
+     * revision.
+     */
+    val addForBeliefRevisionButton = Button(ADD_FOR_BELIEF_REVISION_BUTTON_TEXT)
+
     override fun start(primaryStage:Stage)
     {
         // configure the stage (the window)
@@ -25,9 +48,19 @@ class Gui():Application()
         primaryStage.scene = Scene(borderPane,800.0,500.0)
         primaryStage.scene.stylesheets.add(CSS.FILE_PATH)
 
-        val inputPane = InputPane()
-        borderPane.center = inputPane
-        inputPane.padding = Insets(10.0)
+        borderPane.top = VBox()
+            .apply()
+            {
+                val buttonFlowPane = HBox(addToBeliefStateButton,addForBeliefRevisionButton)
+                buttonFlowPane.spacing = Dimens.KEYLINE_SMALL.toDouble()
+
+                val spacer = Region()
+                spacer.prefWidth = Dimens.KEYLINE_SMALL.toDouble()
+                spacer.prefHeight = Dimens.KEYLINE_SMALL.toDouble()
+
+                padding = Insets(Dimens.KEYLINE_SMALL.toDouble())
+                children.addAll(sentenceTextField,spacer,buttonFlowPane)
+            }
 
         // display the window
         primaryStage.show()
