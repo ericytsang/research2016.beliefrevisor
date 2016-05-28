@@ -65,12 +65,12 @@ class BeliefStateOutputPanel(labelText:String):VBox()
     private val displayModeComboBox = ComboBox<DisplayModeOption>()
         .apply()
         {
+            valueProperty().set(displayModeOptions.first())
             valueProperty().addListener(InvalidationListener()
             {
                 updateDisplay()
             })
             items = ObservableListWrapper(displayModeOptions)
-            valueProperty().set(displayModeOptions.first())
         }
 
     /**
