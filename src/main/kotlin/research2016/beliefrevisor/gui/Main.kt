@@ -102,6 +102,34 @@ class Gui():Application()
     val revisionConfigurationPanel = RevisionConfigurationPanel()
 
     val performRevisionButton = Button(PERFORM_REVISION_BUTTON_TEXT)
+        .apply()
+        {
+            // disable this button if there are no formulas specified for the
+            // initial belief state, or sentences for revision
+            val listener = object:BeliefStateOutputPanel.Listener()
+            {
+                override fun onItemsChanged()
+                {
+                    isDisable = initialBeliefStateDisplay.propositions.isEmpty() ||
+                        revisionSentencesDisplay.propositions.isEmpty()
+                }
+            }.apply {onItemsChanged()}
+            initialBeliefStateDisplay.listeners.add(listener)
+            revisionSentencesDisplay.listeners.add(listener)
+
+            // when the revision button is clicked, perform a belief revision
+            setOnAction()
+            {
+                val situationComparatorFactory = fun(initialBeliefState:Set<Proposition>):Comparator<Situation>
+                {
+                    return revisionConfigurationPanel.situationComparator(initialBeliefState)
+                }
+                val initialBeliefState = initialBeliefStateDisplay.propositions.toSet()
+                val sentence = revisionSentencesDisplay.propositions.fold<Proposition,Proposition?>(null) {i,n -> i?.let {i and n} ?: n}!!
+                val resultingBeliefState = TotalPreOrderBeliefRevisionStrategy(situationComparatorFactory).revise(initialBeliefState,sentence)
+                resultingBeliefStateDisplay.propositions = resultingBeliefState.toList()
+            }
+        }
 
     val commitRevisionButton = Button(COMMIT_REVISION_BUTTON_TEXT)
 
