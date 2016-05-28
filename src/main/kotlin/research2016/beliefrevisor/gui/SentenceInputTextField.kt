@@ -40,7 +40,7 @@ class InputPane:VBox()
     /**
      * label used to display any parsing errors if any.
      */
-    val errorLabel = Label(LABEL_NO_TEXT_PROMPT)
+    private val errorLabel = Label(LABEL_NO_TEXT_PROMPT)
 
     init
     {
@@ -75,11 +75,13 @@ class SentenceInputTextField:TextField()
      * parsing errors.
      */
     var errorMessage:String? = null
+        private set
 
     /**
      * the sentence that was entered into this text field.
      */
     var sentence:Proposition? = null
+        private set
 
     init
     {
