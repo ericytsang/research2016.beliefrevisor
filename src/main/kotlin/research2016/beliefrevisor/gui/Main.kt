@@ -35,7 +35,26 @@ class Gui():Application()
         const val RESULTING_BELIEF_STATE_LABEL_TEXT = "Resulting Belief State"
     }
 
+    val initialBeliefStateDisplay = BeliefStateOutputPanel(INITIAL_BELIEF_STATE_LABEL_TEXT)
+
+    val revisionSentencesDisplay = BeliefStateOutputPanel(REVISION_SENTENCES_LABEL_TEXT)
+
+    val resultingBeliefStateDisplay = BeliefStateOutputPanel(RESULTING_BELIEF_STATE_LABEL_TEXT)
+
     val sentenceTextField = InputPane()
+        .apply()
+        {
+            val listener = object:BeliefStateOutputPanel.Listener()
+            {
+                override fun onPropositionDoubleClicked(proposition:Proposition)
+                {
+                    sentenceTextField.text = proposition.toString()
+                }
+            }
+            initialBeliefStateDisplay.listeners.add(listener)
+            revisionSentencesDisplay.listeners.add(listener)
+            resultingBeliefStateDisplay.listeners.add(listener)
+        }
 
     /**
      * button that when clicked, indicates that the user wants to add the text
@@ -80,11 +99,8 @@ class Gui():Application()
             }
         }
 
-    val initialBeliefStateDisplay = BeliefStateOutputPanel(INITIAL_BELIEF_STATE_LABEL_TEXT)
 
-    val revisionSentencesDisplay = BeliefStateOutputPanel(REVISION_SENTENCES_LABEL_TEXT)
 
-    val resultingBeliefStateDisplay = BeliefStateOutputPanel(RESULTING_BELIEF_STATE_LABEL_TEXT)
 
     val revisionConfigurationPanel = RevisionConfigurationPanel()
 
