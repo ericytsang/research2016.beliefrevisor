@@ -3,9 +3,11 @@ package research2016.beliefrevisor.gui
 import com.sun.javafx.collections.ObservableListWrapper
 import javafx.application.Platform
 import javafx.beans.InvalidationListener
+import javafx.event.EventHandler
 import javafx.scene.control.ComboBox
 import javafx.scene.control.Label
-import javafx.scene.control.TextArea
+import javafx.scene.control.ListView
+import javafx.scene.input.KeyCode
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import research2016.propositionallogic.Contradiction
@@ -30,18 +32,30 @@ class BeliefStateOutputPanel(labelText:String):VBox()
     }
 
     /**
-     * [propositions] are displayed in the [beliefSetTextArea].
+     * listener that is notified of events associated with this instance.
      */
-    var propositions:Set<Proposition> = emptySet()
+    var listeners = mutableSetOf<Listener>()
+
+    /**
+     * [propositions] are displayed in the [beliefSetListView].
+     */
+    var propositions:List<Proposition> = emptyList()
 
         set(value)
         {
             field = value
             updateDisplay()
+            listeners.forEach {it.onItemsChanged()}
         }
 
+    open class Listener
+    {
+        open fun onPropositionDoubleClicked(proposition:Proposition) {}
+        open fun onItemsChanged() {}
+    }
+
     /**
-     * [label] appears above the [beliefSetTextArea].
+     * [label] appears above the [beliefSetListView].
      */
     private val label = Label(labelText)
 
@@ -60,19 +74,43 @@ class BeliefStateOutputPanel(labelText:String):VBox()
         }
 
     /**
-     * [TextArea] used to display all the [propositions] in the format specified
-     * by the [DisplayModeOption] mode selected in the [displayModeComboBox] control.
+     * [ListView] used to display all the [propositions] in the format specified
+     * by the [DisplayModeOption] mode selected in the [displayModeComboBox]
+     * control.
      */
-    private val beliefSetTextArea = BeliefStateOutputTextArea()
+    private val beliefSetListView = ListView<Proposition>()
+        .apply()
+        {
+            // when delete or backspace key is pressed, remove selected element
+            onKeyReleased = EventHandler()
+            {
+                event ->
+                if (event.code in (setOf(KeyCode.DELETE,KeyCode.BACK_SPACE)) &&
+                    focusModel.focusedItem != null)
+                {
+                    propositions -= focusModel.focusedItem
+                }
+            }
+
+            // when a proposition is double clicked, notify the listener
+            onMouseClicked = EventHandler()
+            {
+                event ->
+                if (event.clickCount == 2 && focusModel.focusedItem != null)
+                {
+                    listeners.forEach {it.onPropositionDoubleClicked(focusModel.focusedItem)}
+                }
+            }
+        }
 
     init
     {
         // add children to layout...
-        children.addAll(label,beliefSetTextArea,displayModeComboBox)
+        children.addAll(label,beliefSetListView,displayModeComboBox)
 
         // configure layout...
         spacing = Dimens.KEYLINE_SMALL.toDouble()
-        setVgrow(beliefSetTextArea,Priority.ALWAYS)
+        setVgrow(beliefSetListView,Priority.ALWAYS)
     }
 
     /**
@@ -82,48 +120,21 @@ class BeliefStateOutputPanel(labelText:String):VBox()
     private fun updateDisplay()
     {
         val transform = displayModeComboBox.value.transform
-        val displayedPropositions = propositions.map {transform(it)}.toSet()
+        val displayedPropositions = propositions.map {transform(it)}
         Platform.runLater()
         {
-            beliefSetTextArea.propositions = displayedPropositions
+            beliefSetListView.items.clear()
+            beliefSetListView.items.addAll(displayedPropositions)
         }
     }
 
     /**
      * [name] is displayed directly in the [displayModeComboBox] control.
      * [transform] is used to convert each element in [propositions] into
-     * another to be displayed in the [beliefSetTextArea].
+     * another to be displayed in the [beliefSetListView].
      */
     private class DisplayModeOption(val name:String,val transform:(Proposition)->Proposition)
     {
         override fun toString():String = name
     }
-}
-
-private class BeliefStateOutputTextArea:TextArea()
-{
-    init
-    {
-        isEditable = false
-    }
-
-    /**
-     * each element of [propositions] is displayed in its own line in this
-     * un-editable [TextArea]. whenever [propositions] is set, it updates the
-     * [TextArea].
-     */
-    var propositions:Set<Proposition> = emptySet()
-
-        // update text area text every time this value is set
-        set(value)
-        {
-            field = value
-            assert(Platform.isFxApplicationThread())
-            text = propositions
-                .fold(StringBuilder())
-                {
-                    stb,it -> stb.append("$it\n")
-                }
-                .toString()
-        }
 }
