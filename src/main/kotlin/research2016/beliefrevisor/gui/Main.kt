@@ -99,9 +99,6 @@ class Gui():Application()
             }
         }
 
-
-
-
     val revisionConfigurationPanel = RevisionConfigurationPanel()
 
     val performRevisionButton = Button(PERFORM_REVISION_BUTTON_TEXT)
