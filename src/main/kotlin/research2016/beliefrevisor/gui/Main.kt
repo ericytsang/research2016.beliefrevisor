@@ -1,6 +1,7 @@
 package research2016.beliefrevisor.gui
 
 import javafx.application.Application
+import javafx.beans.InvalidationListener
 import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.Scene
@@ -10,6 +11,11 @@ import javafx.scene.layout.HBox
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.stage.Stage
+import research2016.beliefrevisor.core.TotalPreOrderBeliefRevisionStrategy
+import research2016.propositionallogic.Proposition
+import research2016.propositionallogic.Situation
+import research2016.propositionallogic.and
+import java.util.Comparator
 
 fun main(args:Array<String>)
 {
@@ -36,6 +42,21 @@ class Gui():Application()
      * from [sentenceTextField] to belief state.
      */
     val addToBeliefStateButton = Button(ADD_TO_BELIEF_STATE_BUTTON_TEXT)
+        .apply()
+        {
+            sentenceTextField.sentenceTextField.textProperty().addListener(InvalidationListener()
+            {
+                isDisable = sentenceTextField.sentenceTextField.sentence == null
+            }.apply {invalidated(null)})
+
+            setOnAction()
+            {
+                sentenceTextField.sentenceTextField.sentence?.let()
+                {
+                    initialBeliefStateDisplay.propositions += it
+                }
+            }
+        }
 
     /**
      * button that when clicked, indicates that the user wants to add the text
@@ -43,6 +64,21 @@ class Gui():Application()
      * revision.
      */
     val addForBeliefRevisionButton = Button(ADD_FOR_BELIEF_REVISION_BUTTON_TEXT)
+        .apply()
+        {
+            sentenceTextField.sentenceTextField.textProperty().addListener(InvalidationListener()
+            {
+                isDisable = sentenceTextField.sentenceTextField.sentence == null
+            }.apply {invalidated(null)})
+
+            setOnAction()
+            {
+                sentenceTextField.sentenceTextField.sentence?.let()
+                {
+                    revisionSentencesDisplay.propositions += it
+                }
+            }
+        }
 
     val initialBeliefStateDisplay = BeliefStateOutputPanel(INITIAL_BELIEF_STATE_LABEL_TEXT)
 
