@@ -132,6 +132,21 @@ class Gui():Application()
         }
 
     val commitRevisionButton = Button(COMMIT_REVISION_BUTTON_TEXT)
+        .apply()
+        {
+            resultingBeliefStateDisplay.listeners.add(object:BeliefStateOutputPanel.Listener()
+            {
+                override fun onItemsChanged()
+                {
+                    isDisable = resultingBeliefStateDisplay.propositions.isEmpty()
+                }
+            }.apply {onItemsChanged()})
+
+            setOnAction()
+            {
+                initialBeliefStateDisplay.propositions = resultingBeliefStateDisplay.propositions
+            }
+        }
 
     override fun start(primaryStage:Stage)
     {
