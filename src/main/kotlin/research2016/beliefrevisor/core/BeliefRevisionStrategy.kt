@@ -6,6 +6,7 @@ import research2016.propositionallogic.basicPropositions
 import research2016.propositionallogic.evaluate
 import research2016.propositionallogic.generateFrom
 import research2016.propositionallogic.makeFrom
+import research2016.propositionallogic.models
 import java.util.Comparator
 
 interface BeliefRevisionStrategy
@@ -30,7 +31,7 @@ class TotalPreOrderBeliefRevisionStrategy(val situationSorterFactory:(Set<Propos
         val orderedSentenceModels = Situation
 
             // find all models of the sentence
-            .generateFrom((setOf(sentence)+beliefState).flatMap {it.basicPropositions}.fold(emptySet()) {initial,next -> initial+next})
+            .generateFrom((setOf(sentence)+beliefState).flatMap {it.basicPropositions}.toSet())
             .filter {sentence.evaluate(it)}
 
             // sort them using the situation sorter
