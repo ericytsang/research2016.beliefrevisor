@@ -175,6 +175,7 @@ class Gui():Application()
                 spacing = Dimens.KEYLINE_SMALL.toDouble()
                 padding = Insets(Dimens.KEYLINE_SMALL.toDouble())
                 children.addAll(initialBeliefStateDisplay,revisionSentencesDisplay,resultingBeliefStateDisplay)
+                children.forEach {HBox.setHgrow(it,Priority.ALWAYS)}
             }
 
         borderPane.bottom = HBox()
