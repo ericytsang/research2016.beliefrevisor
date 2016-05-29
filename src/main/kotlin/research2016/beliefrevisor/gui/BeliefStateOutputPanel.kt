@@ -13,6 +13,7 @@ import javafx.scene.layout.VBox
 import research2016.propositionallogic.Contradiction
 import research2016.propositionallogic.Proposition
 import research2016.propositionallogic.Tautology
+import research2016.propositionallogic.toDnf
 
 class BeliefStateOutputPanel(labelText:String):VBox()
 {
@@ -24,9 +25,9 @@ class BeliefStateOutputPanel(labelText:String):VBox()
         private val displayModeOptions:List<DisplayModeOption> = run()
         {
             val cnfOption = DisplayModeOption("Conjunctive Normal Form",{proposition:Proposition -> proposition})
-            val dnfOption = DisplayModeOption("Disjunctive Normal Form",{proposition:Proposition -> proposition})
-            val defaultOption = DisplayModeOption("Default",{proposition:Proposition -> Contradiction})
-            val simplifiedOption = DisplayModeOption("Simplified",{proposition:Proposition -> Tautology})
+            val dnfOption = DisplayModeOption("Disjunctive Normal Form",{proposition:Proposition -> proposition.toDnf()})
+            val defaultOption = DisplayModeOption("Default",{proposition:Proposition -> proposition})
+            val simplifiedOption = DisplayModeOption("Simplified",{proposition:Proposition -> proposition})
             return@run listOf(defaultOption,simplifiedOption,cnfOption,dnfOption)
         }
     }
@@ -88,7 +89,7 @@ class BeliefStateOutputPanel(labelText:String):VBox()
                 if (event.code in (setOf(KeyCode.DELETE,KeyCode.BACK_SPACE)) &&
                     focusModel.focusedItem != null)
                 {
-                    propositions -= focusModel.focusedItem
+                    propositions = propositions.filterIndexed {i,e -> i != focusModel.focusedIndex}
                 }
             }
 
