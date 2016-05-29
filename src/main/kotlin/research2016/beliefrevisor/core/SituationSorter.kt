@@ -12,11 +12,17 @@ abstract class ByDistanceComparator(val beliefState:Set<Proposition>):Comparator
      */
     protected val beliefStateModels:Set<Situation> = run()
     {
-        val concatenatedBeliefState = beliefState.fold<Proposition,Proposition?>(null)
+        val concatenatedBeliefState = beliefState.let()
         {
-            initial,next ->
-            initial?.let {initial and next} ?: next
-        } ?: Contradiction
+            if (it.isEmpty())
+            {
+                Contradiction
+            }
+            else
+            {
+                And.make(it.toList())
+            }
+        }
         concatenatedBeliefState.models
     }
 
