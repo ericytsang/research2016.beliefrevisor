@@ -1,12 +1,16 @@
 package research2016.beliefrevisor.core
 
+import research2016.propositionallogic.And
 import research2016.propositionallogic.Proposition
 import research2016.propositionallogic.Situation
+import research2016.propositionallogic.and
 import research2016.propositionallogic.basicPropositions
 import research2016.propositionallogic.evaluate
 import research2016.propositionallogic.generateFrom
 import research2016.propositionallogic.makeFrom
 import research2016.propositionallogic.models
+import research2016.propositionallogic.not
+import research2016.propositionallogic.or
 import java.util.Comparator
 
 interface BeliefRevisionStrategy
@@ -28,19 +32,25 @@ class TotalPreOrderBeliefRevisionStrategy(val situationSorterFactory:(Set<Propos
     {
         // create the situation sorter
         val situationSorter = situationSorterFactory(beliefState)
-        val orderedSentenceModels = Situation
 
-            // find all models of the sentence
-            .generateFrom((setOf(sentence)+beliefState).flatMap {it.basicPropositions}.toSet())
-            .filter {sentence.evaluate(it)}
+        val basicPropositionTautologies = (setOf(sentence)+beliefState)
+            // get all basic propositions involved
+            .flatMap {it.basicPropositions}.toSet()
+            // make each one into a tautology
+            .map {it or it.not}
+            // and them together
+            .let {And.make(it)}
 
-            // sort them using the situation sorter
-            .sortedWith(situationSorter)
+        // all models of the sentence..and'd together with
+        // basicPropositionTautologies to make sure the models involves all
+        // variables
+        val sentenceModels = (sentence and basicPropositionTautologies).models
 
-        val nearestSituations = orderedSentenceModels
+        val nearestModel = sentenceModels.minWith(situationSorter)
+        val nearestSituations = sentenceModels
 
             // keep only the ones with the least distance according to the sorter
-            .filter {situationSorter.compare(orderedSentenceModels.first(),it) == 0}
+            .filter {situationSorter.compare(nearestModel,it) == 0}
 
         // convert into a proposition and return
         return nearestSituations.map {Proposition.makeFrom(it)}.toSet()
