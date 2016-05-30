@@ -4,11 +4,20 @@ import research2016.propositionallogic.*
 import java.util.Comparator
 import java.util.LinkedHashMap
 
+/**
+ * [beliefState] is the belief state that is being revised.
+ *
+ * the [ByDistanceComparator] is a [Comparator] that can compare [Situation]
+ * with one another to specify an ordering.
+ *
+ * this implementation assumes that each [Situation] is a specific distance away
+ * from the [beliefState], and implements the [compare] function with this
+ * assumption.
+ */
 abstract class ByDistanceComparator(val beliefState:Set<Proposition>):Comparator<Situation>
 {
     /**
-     * all models of the initial belief state; the belief state that is being
-     * revised.
+     * all models of the [beliefState].
      */
     protected val beliefStateModels:Set<Situation> = run()
     {
@@ -27,8 +36,8 @@ abstract class ByDistanceComparator(val beliefState:Set<Proposition>):Comparator
     }
 
     /**
-     * used to cache previous calculations of the minimum distance between a
-     * [Situation] and the [beliefStateModels].
+     * used to cache previous calculations produced by the [computeDistance]
+     * function.
      */
     private val cachedCalculations = LinkedHashMap<Situation,Int>()
 
@@ -45,6 +54,9 @@ abstract class ByDistanceComparator(val beliefState:Set<Proposition>):Comparator
         return situation1Distance-situation2Distance
     }
 
+    /**
+     * returns the distance from the [situation] to the [beliefState].
+     */
     protected abstract fun computeDistance(situation:Situation):Int
 }
 
@@ -83,9 +95,10 @@ class WeightedHammingDistanceComparator(beliefState:Set<Proposition>,val weights
     }
 
     /**
-     * returns the hamming distance between this [situation1] and [situation2];
-     * the number of mappings of variables to truth values that they do not
-     * match.
+     * returns the weighted hamming distance between this [situation1] and
+     * [situation2]; the number of mappings of variables to truth values that
+     * they do not match multiplied by their respective weights, then summed
+     * together.
      */
     fun weightedHammingDistance(situation1:Situation,situation2:Situation):Int
     {
