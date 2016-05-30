@@ -10,10 +10,9 @@ import javafx.scene.control.ListView
 import javafx.scene.input.KeyCode
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
-import research2016.propositionallogic.Contradiction
 import research2016.propositionallogic.Proposition
-import research2016.propositionallogic.Tautology
 import research2016.propositionallogic.toDnf
+import research2016.propositionallogic.toFullDnf
 
 class BeliefStateOutputPanel(labelText:String):VBox()
 {
@@ -24,11 +23,10 @@ class BeliefStateOutputPanel(labelText:String):VBox()
          */
         private val displayModeOptions:List<DisplayModeOption> = run()
         {
-            val cnfOption = DisplayModeOption("Conjunctive Normal Form",{proposition:Proposition -> proposition})
-            val dnfOption = DisplayModeOption("Disjunctive Normal Form",{proposition:Proposition -> proposition.toDnf()})
+            val cnfOption = DisplayModeOption("Conjunctive Normal Form",{proposition:Proposition -> proposition.toDnf()})
+            val fullDnfOption = DisplayModeOption("Full Disjunctive Normal Form",{proposition:Proposition -> proposition.toFullDnf()})
             val defaultOption = DisplayModeOption("Default",{proposition:Proposition -> proposition})
-            val simplifiedOption = DisplayModeOption("Simplified",{proposition:Proposition -> proposition})
-            return@run listOf(defaultOption,simplifiedOption,cnfOption,dnfOption)
+            return@run listOf(defaultOption,cnfOption,fullDnfOption)
         }
     }
 

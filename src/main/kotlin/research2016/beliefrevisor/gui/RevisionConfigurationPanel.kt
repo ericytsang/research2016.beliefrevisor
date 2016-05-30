@@ -2,17 +2,8 @@ package research2016.beliefrevisor.gui
 
 import com.sun.javafx.collections.ObservableListWrapper
 import javafx.beans.InvalidationListener
-import javafx.event.EventHandler
 import javafx.scene.Node
-import javafx.scene.control.Alert
-import javafx.scene.control.Button
 import javafx.scene.control.ComboBox
-import javafx.scene.control.ListView
-import javafx.scene.control.TextInputDialog
-import javafx.scene.input.KeyCode
-import javafx.scene.layout.HBox
-import javafx.scene.layout.Region
-import javafx.scene.layout.StackPane
 import javafx.scene.layout.VBox
 import research2016.beliefrevisor.core.HammingDistanceComparator
 import research2016.beliefrevisor.core.SetInclusionComparator
@@ -22,23 +13,30 @@ import research2016.propositionallogic.Proposition
 import research2016.propositionallogic.Situation
 import research2016.propositionallogic.makeFrom
 import research2016.propositionallogic.toParsableString
+import java.io.Serializable
 import java.util.Comparator
-import java.util.Optional
 
 class RevisionConfigurationPanel:VBox()
 {
     companion object
     {
-        /**
-         * [List] of [RevisionOperatorOption]s used in the
-         * [revisionOperatorComboBox] control.
-         */
-        private val revisionOperatorOptions:List<RevisionOperatorOption> = run()
-        {
-            return@run listOf(HammingDistanceRevisionOperatorOption(),
-                WeightedHammingDistanceRevisionOperatorOption(),
-                SetInclusionRevisionOperatorOption())
-        }
+        const val SAVE_MAP_WEIGHTED_HAMMING_DISTANCE = "SAVE_MAP_WEIGHTED_HAMMING_DISTANCE"
+        const val SAVE_MAP_SET_INCLUSION = "SAVE_MAP_SET_INCLUSION"
+    }
+
+    private val hammingDistanceRevisionOperatorOption = HammingDistanceRevisionOperatorOption()
+    private val weightedHammingDistanceRevisionOperatorOption = WeightedHammingDistanceRevisionOperatorOption()
+    private val setInclusionRevisionOperatorOption = SetInclusionRevisionOperatorOption()
+
+    /**
+     * [List] of [RevisionOperatorOption]s used in the
+     * [revisionOperatorComboBox] control.
+     */
+    private val revisionOperatorOptions:List<RevisionOperatorOption> = run()
+    {
+        return@run listOf(hammingDistanceRevisionOperatorOption,
+            weightedHammingDistanceRevisionOperatorOption,
+            setInclusionRevisionOperatorOption)
     }
 
     /**
@@ -47,6 +45,21 @@ class RevisionConfigurationPanel:VBox()
     fun situationComparator(initialBeliefState:Set<Proposition>):Comparator<Situation>
     {
         return revisionOperatorComboBox.value.situationComparator(initialBeliefState)
+    }
+
+    fun saveToMap():Map<String,Any>
+    {
+        val saveMap = mutableMapOf<String,Any>()
+        saveMap.put(SAVE_MAP_WEIGHTED_HAMMING_DISTANCE,weightedHammingDistanceRevisionOperatorOption.operatorSettings.listView.items.toList())
+        saveMap.put(SAVE_MAP_SET_INCLUSION,setInclusionRevisionOperatorOption.operatorSettings.listView.items.toList())
+        return saveMap
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun loadFromMap(saveMap:Map<String,Any>)
+    {
+        weightedHammingDistanceRevisionOperatorOption.operatorSettings.listView.items = ObservableListWrapper(saveMap[SAVE_MAP_WEIGHTED_HAMMING_DISTANCE] as List<WeightedHammingDistanceRevisionOperatorOption.Mapping>)
+        setInclusionRevisionOperatorOption.operatorSettings.listView.items = ObservableListWrapper(saveMap[SAVE_MAP_SET_INCLUSION] as List<Proposition>)
     }
 
     /**
@@ -84,7 +97,7 @@ class RevisionConfigurationPanel:VBox()
         override fun toString():String = name
     }
 
-    private class HammingDistanceRevisionOperatorOption:RevisionOperatorOption("Hamming Distance")
+    private class  HammingDistanceRevisionOperatorOption:RevisionOperatorOption("Hamming Distance")
     {
         override val operatorSettings:Node? = null
         override fun situationComparator(initialBeliefState:Set<Proposition>):Comparator<Situation>
@@ -100,7 +113,8 @@ class RevisionConfigurationPanel:VBox()
         {
             init
             {
-                listView.prefHeight = 100.0
+                listView.minHeight = 100.0
+                listView.prefHeight = listView.minHeight
             }
 
             override fun parse(string:String):Mapping
@@ -169,7 +183,7 @@ class RevisionConfigurationPanel:VBox()
             return WeightedHammingDistanceComparator(initialBeliefState,weights)
         }
 
-        class Mapping(val variableName:String,val weight:Int)
+        class Mapping(val variableName:String,val weight:Int):Serializable
         {
             override fun toString():String = "$variableName = $weight"
         }
@@ -181,7 +195,8 @@ class RevisionConfigurationPanel:VBox()
         {
             init
             {
-                listView.prefHeight = 100.0
+                listView.minHeight = 100.0
+                listView.prefHeight = listView.minHeight
             }
 
             override fun parse(string:String):Proposition
