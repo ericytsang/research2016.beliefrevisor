@@ -16,9 +16,12 @@ import javafx.scene.layout.StackPane
 import javafx.scene.layout.VBox
 import research2016.beliefrevisor.core.HammingDistanceComparator
 import research2016.beliefrevisor.core.SetInclusionComparator
+import research2016.beliefrevisor.core.WeightedHammingDistanceComparator
+import research2016.propositionallogic.BasicProposition
 import research2016.propositionallogic.Proposition
 import research2016.propositionallogic.Situation
 import research2016.propositionallogic.makeFrom
+import research2016.propositionallogic.toParsableString
 import java.util.Comparator
 import java.util.Optional
 
@@ -92,132 +95,127 @@ class RevisionConfigurationPanel:VBox()
 
     private class WeightedHammingDistanceRevisionOperatorOption:RevisionOperatorOption("Weighted Hamming Distance")
     {
-        override val operatorSettings:Node? = Region()
+
+        override val operatorSettings = object:EditableListView<Mapping>("mapping")
+        {
+            init
+            {
+                listView.prefHeight = 100.0
+            }
+
+            override fun parse(string:String):Mapping
+            {
+                val subStrings = string.split("=")
+                if (subStrings.size != 2)
+                {
+                    throw IllegalArgumentException("an equals sign must be used to represent the mapping e.g. \"a = 5\"")
+                }
+                if (!(subStrings[0].trim().matches(Regex("[a-zA-Z]+"))))
+                {
+                    throw IllegalArgumentException("the variable name \"${subStrings[0].trim()}\" may only contain alphabetic characters.")
+                }
+                if (!(subStrings[1].trim().matches(Regex("[0-9]+"))))
+                {
+                    throw IllegalArgumentException("the variable weight \"${subStrings[1].trim()}\" may only contain numeric characters.")
+                }
+                val variableName = subStrings[0].trim()
+                val weight = subStrings[1].trim().toInt()
+                return Mapping(variableName,weight)
+            }
+
+            override fun toInputString(entry:Mapping):String
+            {
+                return entry.toString()
+            }
+
+            override fun addToList(existingEntries:MutableList<Mapping>,indexOfEntry:Int,newEntry:Mapping):String?
+            {
+                if (existingEntries.any {it.variableName == newEntry.variableName})
+                {
+                    return "A mapping for the variable \"${newEntry.variableName}\" already exists."
+                }
+                else
+                {
+                    existingEntries.add(indexOfEntry,newEntry)
+                    return null
+                }
+            }
+
+            override fun removeFromList(existingEntries:MutableList<Mapping>,indexOfEntry:Int):String?
+            {
+                existingEntries.removeAt(indexOfEntry)
+                return null
+            }
+
+            override fun updateListAt(existingEntries:MutableList<Mapping>,indexOfEntry:Int,newEntry:Mapping):String?
+            {
+                val resultingList = existingEntries.filterIndexed {i,e -> i != indexOfEntry}
+                if (resultingList.any {it.variableName == newEntry.variableName})
+                {
+                    return "A mapping for the variable \"${newEntry.variableName}\" already exists."
+                }
+                else
+                {
+                    existingEntries[indexOfEntry] = newEntry
+                    return null
+                }
+            }
+        }
+
         override fun situationComparator(initialBeliefState:Set<Proposition>):Comparator<Situation>
         {
-            // todo
-            throw UnsupportedOperationException()
+            val weights = operatorSettings.listView.items
+                .associate {BasicProposition.make(it.variableName) to it.weight}
+            return WeightedHammingDistanceComparator(initialBeliefState,weights)
+        }
+
+        class Mapping(val variableName:String,val weight:Int)
+        {
+            override fun toString():String = "$variableName = $weight"
         }
     }
 
     private class SetInclusionRevisionOperatorOption:RevisionOperatorOption("Set Inclusion")
     {
-        private val propositionList = ListView<Proposition>().apply()
+        override val operatorSettings = object:EditableListView<Proposition>("sentence")
         {
-            // todo magic number
-            prefHeight = 100.0
-
-            // allow editing of sentences by double-clicking on them
-            onMouseClicked = EventHandler()
+            init
             {
-                event ->
-
-                // continue if it is a double click, and an item in the list is selected
-                if (!(event.clickCount == 2 && focusModel.focusedItem != null))
-                {
-                    return@EventHandler
-                }
-
-                var previousResult:String? = null
-                while (true)
-                {
-                    // show text input dialog to get sentence from user
-                    val result = TextInputDialog(previousResult ?: focusModel.focusedItem!!.toString())
-                        .apply()
-                        {
-                            title = "Edit Existing Sentence"
-                            headerText = "Please enter the sentence below."
-                        }
-                        .showAndWait()
-
-                    // try to update the existing sentence...
-                    try
-                    {
-                        if (result.isPresent)
-                        {
-                            items[focusModel.focusedIndex] = Proposition.makeFrom(result.get())
-                        }
-                        break
-                    }
-                    catch (ex:Exception)
-                    {
-                        previousResult = result.get()
-
-                        // sentence format is probably invalid
-                        val alert = Alert(Alert.AlertType.ERROR)
-                        alert.title = "Parsing Error"
-                        alert.headerText = "Invalid sentence format."
-                        alert.contentText = ex.message
-                        alert.showAndWait()
-                    }
-                }
+                listView.prefHeight = 100.0
             }
 
-            // allow deletion of sentences by pressing delete or bacspace
-            onKeyReleased = EventHandler()
+            override fun parse(string:String):Proposition
             {
-                event ->
-                if (event.code in setOf(KeyCode.DELETE,KeyCode.BACK_SPACE))
-                {
-                    items.removeAt(focusModel.focusedIndex)
-                }
+                return Proposition.makeFrom(string)
             }
-        }
 
-        /**
-         * [Button] that when clicked, displays a text input dialog to get a
-         * sentence from the user, which will then be added to the
-         * [propositionList].
-         */
-        private val addSentenceButton = Button("Add Sentence").apply()
-        {
-            onAction = EventHandler()
+            override fun toInputString(entry:Proposition):String
             {
-                var previousResult:String? = null
-                while (true)
-                {
-                    // show text input dialog to get sentence from user
-                    val result = TextInputDialog(previousResult ?: "")
-                        .apply()
-                        {
-                            title = "Add New Sentence"
-                            headerText = "Please enter the sentence below."
-                        }
-                        .showAndWait()
-
-                    // try to add the new sentence...
-                    try
-                    {
-                        if (result.isPresent)
-                        {
-                            propositionList.items.add(Proposition.makeFrom(result.get()))
-                        }
-                        break
-                    }
-                    catch (ex:Exception)
-                    {
-                        previousResult = result.get()
-
-                        // sentence format is probably invalid
-                        val alert = Alert(Alert.AlertType.ERROR)
-                        alert.title = "Parsing Error"
-                        alert.headerText = "Invalid sentence format."
-                        alert.contentText = ex.message
-                        alert.showAndWait()
-                    }
-                }
+                return entry.toParsableString()
             }
-        }
 
-        override val operatorSettings:Node? = VBox().apply()
-        {
-            spacing = Dimens.KEYLINE_SMALL.toDouble()
-            children.addAll(propositionList,addSentenceButton)
+            override fun addToList(existingEntries:MutableList<Proposition>,indexOfEntry:Int,newEntry:Proposition):String?
+            {
+                existingEntries.add(indexOfEntry,newEntry)
+                return null
+            }
+
+            override fun removeFromList(existingEntries:MutableList<Proposition>,indexOfEntry:Int):String?
+            {
+                existingEntries.removeAt(indexOfEntry)
+                return null
+            }
+
+            override fun updateListAt(existingEntries:MutableList<Proposition>,indexOfEntry:Int,newEntry:Proposition):String?
+            {
+                existingEntries[indexOfEntry] = newEntry
+                return null
+            }
         }
 
         override fun situationComparator(initialBeliefState:Set<Proposition>):Comparator<Situation>
         {
-            return SetInclusionComparator(propositionList.items.toSet())
+            return SetInclusionComparator(operatorSettings.listView.items.toSet())
         }
     }
 }
