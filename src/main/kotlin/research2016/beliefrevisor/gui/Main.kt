@@ -15,6 +15,7 @@ import research2016.beliefrevisor.core.TotalPreOrderBeliefRevisionStrategy
 import research2016.propositionallogic.Proposition
 import research2016.propositionallogic.Situation
 import research2016.propositionallogic.and
+import research2016.propositionallogic.toParsableString
 import java.util.Comparator
 
 fun main(args:Array<String>)
@@ -48,7 +49,7 @@ class Gui():Application()
             {
                 override fun onPropositionDoubleClicked(proposition:Proposition)
                 {
-                    sentenceTextField.text = proposition.toString()
+                    sentenceTextField.text = proposition.toParsableString()
                 }
             }
             initialBeliefStateDisplay.listeners.add(listener)
