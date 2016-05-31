@@ -6,6 +6,7 @@ import javafx.scene.Node
 import javafx.scene.control.ComboBox
 import javafx.scene.layout.VBox
 import research2016.beliefrevisor.core.HammingDistanceComparator
+import research2016.beliefrevisor.core.OrderedSetsComparator
 import research2016.beliefrevisor.core.SetInclusionComparator
 import research2016.beliefrevisor.core.WeightedHammingDistanceComparator
 import research2016.propositionallogic.BasicProposition
@@ -22,11 +23,13 @@ class RevisionConfigurationPanel:VBox()
     {
         const val SAVE_MAP_WEIGHTED_HAMMING_DISTANCE = "SAVE_MAP_WEIGHTED_HAMMING_DISTANCE"
         const val SAVE_MAP_SET_INCLUSION = "SAVE_MAP_SET_INCLUSION"
+        const val SAVE_MAP_ORDERED_SETS = "SAVE_MAP_ORDERED_SETS"
     }
 
     private val hammingDistanceRevisionOperatorOption = HammingDistanceRevisionOperatorOption()
     private val weightedHammingDistanceRevisionOperatorOption = WeightedHammingDistanceRevisionOperatorOption()
     private val setInclusionRevisionOperatorOption = SetInclusionRevisionOperatorOption()
+    private val orderedSetsRevisionOperatorOption = OrderedSetsRevisionOperatorOption()
 
     /**
      * [List] of [RevisionOperatorOption]s used in the
@@ -36,7 +39,8 @@ class RevisionConfigurationPanel:VBox()
     {
         return@run listOf(hammingDistanceRevisionOperatorOption,
             weightedHammingDistanceRevisionOperatorOption,
-            setInclusionRevisionOperatorOption)
+            setInclusionRevisionOperatorOption,
+            orderedSetsRevisionOperatorOption)
     }
 
     /**
@@ -52,14 +56,16 @@ class RevisionConfigurationPanel:VBox()
         val saveMap = mutableMapOf<String,Any>()
         saveMap.put(SAVE_MAP_WEIGHTED_HAMMING_DISTANCE,weightedHammingDistanceRevisionOperatorOption.operatorSettings.listView.items.toList())
         saveMap.put(SAVE_MAP_SET_INCLUSION,setInclusionRevisionOperatorOption.operatorSettings.listView.items.toList())
+        saveMap.put(SAVE_MAP_ORDERED_SETS,orderedSetsRevisionOperatorOption.operatorSettings.listView.items.toList())
         return saveMap
     }
 
     @Suppress("UNCHECKED_CAST")
     fun loadFromMap(saveMap:Map<String,Any>)
     {
-        weightedHammingDistanceRevisionOperatorOption.operatorSettings.listView.items = ObservableListWrapper(saveMap[SAVE_MAP_WEIGHTED_HAMMING_DISTANCE] as List<WeightedHammingDistanceRevisionOperatorOption.Mapping>)
-        setInclusionRevisionOperatorOption.operatorSettings.listView.items = ObservableListWrapper(saveMap[SAVE_MAP_SET_INCLUSION] as List<Proposition>)
+        weightedHammingDistanceRevisionOperatorOption.operatorSettings.listView.items = ObservableListWrapper(saveMap[SAVE_MAP_WEIGHTED_HAMMING_DISTANCE] as List<WeightedHammingDistanceRevisionOperatorOption.Mapping>? ?: emptyList())
+        setInclusionRevisionOperatorOption.operatorSettings.listView.items = ObservableListWrapper(saveMap[SAVE_MAP_SET_INCLUSION] as List<Proposition>? ?: emptyList())
+        orderedSetsRevisionOperatorOption.operatorSettings.listView.items = ObservableListWrapper(saveMap[SAVE_MAP_ORDERED_SETS] as List<Proposition>? ?: emptyList())
     }
 
     /**
@@ -231,6 +237,51 @@ class RevisionConfigurationPanel:VBox()
         override fun situationComparator(initialBeliefState:Set<Proposition>):Comparator<Situation>
         {
             return SetInclusionComparator(operatorSettings.listView.items.toSet())
+        }
+    }
+
+    private class OrderedSetsRevisionOperatorOption:RevisionOperatorOption("Ordered Sets")
+    {
+        override val operatorSettings = object:EditableListView<Proposition>("sentence")
+        {
+            init
+            {
+                listView.minHeight = 100.0
+                listView.prefHeight = listView.minHeight
+            }
+
+            override fun parse(string:String):Proposition
+            {
+                return Proposition.makeFrom(string)
+            }
+
+            override fun toInputString(entry:Proposition):String
+            {
+                return entry.toParsableString()
+            }
+
+            override fun addToList(existingEntries:MutableList<Proposition>,indexOfEntry:Int,newEntry:Proposition):String?
+            {
+                existingEntries.add(indexOfEntry,newEntry)
+                return null
+            }
+
+            override fun removeFromList(existingEntries:MutableList<Proposition>,indexOfEntry:Int):String?
+            {
+                existingEntries.removeAt(indexOfEntry)
+                return null
+            }
+
+            override fun updateListAt(existingEntries:MutableList<Proposition>,indexOfEntry:Int,newEntry:Proposition):String?
+            {
+                existingEntries[indexOfEntry] = newEntry
+                return null
+            }
+        }
+
+        override fun situationComparator(initialBeliefState:Set<Proposition>):Comparator<Situation>
+        {
+            return OrderedSetsComparator(operatorSettings.listView.items)
         }
     }
 }

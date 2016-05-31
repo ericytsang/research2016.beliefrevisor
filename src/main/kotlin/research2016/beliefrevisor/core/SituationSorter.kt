@@ -14,16 +14,16 @@ import java.util.LinkedHashMap
  * from the [beliefState], and implements the [compare] function with this
  * assumption.
  */
-abstract class ByDistanceComparator(val beliefState:Set<Proposition>):Comparator<Situation>
+abstract class ByDistanceComparator():Comparator<Situation>
 {
     /**
-     * all models of the [beliefState].
+     * all models of the receiver.
      */
-    protected val beliefStateModels:Set<Situation> = run()
+    protected fun Iterable<Proposition>.models():Set<Situation>
     {
-        val concatenatedBeliefState = beliefState.let()
+        return let()
         {
-            if (it.isEmpty())
+            if (!it.iterator().hasNext())
             {
                 Contradiction
             }
@@ -31,8 +31,7 @@ abstract class ByDistanceComparator(val beliefState:Set<Proposition>):Comparator
             {
                 And.make(it.toList())
             }
-        }
-        concatenatedBeliefState.models
+        }.models
     }
 
     /**
@@ -60,8 +59,10 @@ abstract class ByDistanceComparator(val beliefState:Set<Proposition>):Comparator
     protected abstract fun computeDistance(situation:Situation):Int
 }
 
-class HammingDistanceComparator(beliefState:Set<Proposition>):ByDistanceComparator(beliefState)
+class HammingDistanceComparator(beliefState:Set<Proposition>):ByDistanceComparator()
 {
+    private val beliefStateModels = beliefState.models()
+
     override fun computeDistance(situation:Situation):Int
     {
         return beliefStateModels.map {hammingDistance(situation,it)}.min() ?: 0
@@ -87,8 +88,10 @@ class HammingDistanceComparator(beliefState:Set<Proposition>):ByDistanceComparat
     }
 }
 
-class WeightedHammingDistanceComparator(beliefState:Set<Proposition>,val weights:Map<BasicProposition,Int>):ByDistanceComparator(beliefState)
+class WeightedHammingDistanceComparator(beliefState:Set<Proposition>,val weights:Map<BasicProposition,Int>):ByDistanceComparator()
 {
+    private val beliefStateModels = beliefState.models()
+
     override fun computeDistance(situation:Situation):Int
     {
         return beliefStateModels.map {weightedHammingDistance(situation,it)}.min() ?: 0
@@ -119,10 +122,26 @@ class WeightedHammingDistanceComparator(beliefState:Set<Proposition>,val weights
     }
 }
 
-class SetInclusionComparator(beliefState:Set<Proposition>,val biases:Set<Proposition> = beliefState):ByDistanceComparator(beliefState)
+class SetInclusionComparator(val biases:Set<Proposition>):ByDistanceComparator()
 {
     override fun computeDistance(situation:Situation):Int
     {
         return biases.count {it.truthiness(situation) == 1.0}.let {-it}
+    }
+}
+
+class OrderedSetsComparator(val orderedSets:List<Proposition>):ByDistanceComparator()
+{
+    override fun computeDistance(situation:Situation):Int
+    {
+        val setIndex = orderedSets.indexOfFirst {it.truthiness(situation) == 1.0}
+        return if (setIndex >= 0)
+        {
+            setIndex
+        }
+        else
+        {
+            Int.MAX_VALUE
+        }
     }
 }

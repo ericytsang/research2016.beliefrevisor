@@ -16,6 +16,8 @@ import javafx.scene.layout.VBox
 import javafx.stage.FileChooser
 import javafx.stage.Stage
 import research2016.beliefrevisor.core.TotalPreOrderBeliefRevisionStrategy
+import research2016.propositionallogic.And
+import research2016.propositionallogic.Contradiction
 import research2016.propositionallogic.Or
 import research2016.propositionallogic.Proposition
 import research2016.propositionallogic.Situation
@@ -141,7 +143,7 @@ class Gui():Application()
                 return revisionConfigurationPanel.situationComparator(initialBeliefState)
             }
             val initialBeliefState = initialBeliefStateDisplay.propositions.toSet()
-            val sentence = revisionSentencesDisplay.propositions.fold<Proposition,Proposition?>(null) {i,n -> i?.let {i and n} ?: n}!!
+            val sentence = revisionSentencesDisplay.propositions.toList().let {if (it.isEmpty()) Contradiction else And.make(it)}
             val resultingBeliefState = TotalPreOrderBeliefRevisionStrategy(situationComparatorFactory).revise(initialBeliefState,sentence)
             resultingBeliefStateDisplay.propositions = listOf(Or.make(resultingBeliefState.toList()))
         }
