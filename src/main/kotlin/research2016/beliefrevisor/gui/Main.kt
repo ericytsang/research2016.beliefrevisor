@@ -15,7 +15,7 @@ import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.stage.FileChooser
 import javafx.stage.Stage
-import research2016.beliefrevisor.core.TotalPreOrderBeliefRevisionStrategy
+import research2016.beliefrevisor.core.ComparatorBeliefRevisionStrategy
 import research2016.propositionallogic.And
 import research2016.propositionallogic.Contradiction
 import research2016.propositionallogic.Or
@@ -65,16 +65,16 @@ class Gui():Application()
 
     val sentenceTextField = InputPane().apply()
     {
-        val listener = object:BeliefStateOutputPanel.Listener()
+        val listener = object:BeliefStateOutputPanel.Observer()
         {
             override fun onPropositionDoubleClicked(proposition:Proposition)
             {
                 sentenceTextField.text = proposition.toParsableString()
             }
         }
-        initialBeliefStateDisplay.listeners.add(listener)
-        revisionSentencesDisplay.listeners.add(listener)
-        resultingBeliefStateDisplay.listeners.add(listener)
+        initialBeliefStateDisplay.observers.add(listener)
+        revisionSentencesDisplay.observers.add(listener)
+        resultingBeliefStateDisplay.observers.add(listener)
     }
 
     /**
@@ -124,7 +124,7 @@ class Gui():Application()
     {
         // disable this button if there are no formulas specified for the
         // initial belief state, or sentences for revision
-        val listener = object:BeliefStateOutputPanel.Listener()
+        val listener = object:BeliefStateOutputPanel.Observer()
         {
             override fun onItemsChanged()
             {
@@ -132,8 +132,8 @@ class Gui():Application()
                     revisionSentencesDisplay.propositions.isEmpty()
             }
         }.apply {onItemsChanged()}
-        initialBeliefStateDisplay.listeners.add(listener)
-        revisionSentencesDisplay.listeners.add(listener)
+        initialBeliefStateDisplay.observers.add(listener)
+        revisionSentencesDisplay.observers.add(listener)
 
         // when the revision button is clicked, perform a belief revision
         setOnAction()
@@ -144,14 +144,14 @@ class Gui():Application()
             }
             val initialBeliefState = initialBeliefStateDisplay.propositions.toSet()
             val sentence = revisionSentencesDisplay.propositions.toList().let {if (it.isEmpty()) Contradiction else And.make(it)}
-            val resultingBeliefState = TotalPreOrderBeliefRevisionStrategy(situationComparatorFactory).revise(initialBeliefState,sentence)
-            resultingBeliefStateDisplay.propositions = listOf(Or.make(resultingBeliefState.toList()))
+            val resultingBeliefState = ComparatorBeliefRevisionStrategy(situationComparatorFactory).revise(initialBeliefState,sentence)
+            resultingBeliefStateDisplay.propositions = resultingBeliefState.toList()
         }
     }
 
     val commitRevisionButton = Button(COMMIT_REVISION_BUTTON_TEXT).apply()
     {
-        resultingBeliefStateDisplay.listeners.add(object:BeliefStateOutputPanel.Listener()
+        resultingBeliefStateDisplay.observers.add(object:BeliefStateOutputPanel.Observer()
         {
             override fun onItemsChanged()
             {

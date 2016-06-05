@@ -14,6 +14,12 @@ import research2016.propositionallogic.Proposition
 import research2016.propositionallogic.toDnf
 import research2016.propositionallogic.toFullDnf
 
+/**
+ * the belief state output panel is a layout that displays a [List] of
+ * [Proposition]s. this [List] can be specified by setting the [propositions]
+ * field. the proposition is displayed in a [propositionsListView] in a format
+ * specified by the [displayModeComboBox].
+ */
 class BeliefStateOutputPanel(labelText:String):VBox()
 {
     companion object
@@ -31,12 +37,13 @@ class BeliefStateOutputPanel(labelText:String):VBox()
     }
 
     /**
-     * listener that is notified of events associated with this instance.
+     * all elements of [observers] are notified of specific events when they
+     * occur.
      */
-    var listeners = mutableSetOf<Listener>()
+    var observers = mutableSetOf<Observer>()
 
     /**
-     * [propositions] are displayed in the [beliefSetListView].
+     * [propositions] are displayed in the [propositionsListView].
      */
     var propositions:List<Proposition> = emptyList()
 
@@ -44,17 +51,28 @@ class BeliefStateOutputPanel(labelText:String):VBox()
         {
             field = value
             updateDisplay()
-            listeners.forEach {it.onItemsChanged()}
+            observers.forEach {it.onItemsChanged()}
         }
 
-    open class Listener
+    /**
+     * elements of [observers] must implement this interface...
+     */
+    open class Observer
     {
+        /**
+         * called when a [Proposition] in the [propositionsListView] is
+         * double-clicked.
+         */
         open fun onPropositionDoubleClicked(proposition:Proposition) {}
+
+        /**
+         * called each time after [propositions] is set to a new value.
+         */
         open fun onItemsChanged() {}
     }
 
     /**
-     * [label] appears above the [beliefSetListView].
+     * [label] appears above the [propositionsListView].
      */
     private val label = Label(labelText)
 
@@ -77,7 +95,7 @@ class BeliefStateOutputPanel(labelText:String):VBox()
      * by the [DisplayModeOption] mode selected in the [displayModeComboBox]
      * control.
      */
-    private val beliefSetListView = ListView<Proposition>()
+    private val propositionsListView = ListView<Proposition>()
         .apply()
         {
             // when delete or backspace key is pressed, remove selected element
@@ -97,7 +115,7 @@ class BeliefStateOutputPanel(labelText:String):VBox()
                 event ->
                 if (event.clickCount == 2 && focusModel.focusedItem != null)
                 {
-                    listeners.forEach {it.onPropositionDoubleClicked(focusModel.focusedItem)}
+                    observers.forEach {it.onPropositionDoubleClicked(focusModel.focusedItem)}
                 }
             }
         }
@@ -105,11 +123,11 @@ class BeliefStateOutputPanel(labelText:String):VBox()
     init
     {
         // add children to layout...
-        children.addAll(label,beliefSetListView,displayModeComboBox)
+        children.addAll(label,propositionsListView,displayModeComboBox)
 
         // configure layout...
         spacing = Dimens.KEYLINE_SMALL.toDouble()
-        setVgrow(beliefSetListView,Priority.ALWAYS)
+        setVgrow(propositionsListView,Priority.ALWAYS)
     }
 
     /**
@@ -122,15 +140,15 @@ class BeliefStateOutputPanel(labelText:String):VBox()
         val displayedPropositions = propositions.map {transform(it)}
         Platform.runLater()
         {
-            beliefSetListView.items.clear()
-            beliefSetListView.items.addAll(displayedPropositions)
+            propositionsListView.items.clear()
+            propositionsListView.items.addAll(displayedPropositions)
         }
     }
 
     /**
      * [name] is displayed directly in the [displayModeComboBox] control.
      * [transform] is used to convert each element in [propositions] into
-     * another to be displayed in the [beliefSetListView].
+     * another to be displayed in the [propositionsListView].
      */
     private class DisplayModeOption(val name:String,val transform:(Proposition)->Proposition)
     {
