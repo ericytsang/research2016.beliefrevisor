@@ -15,17 +15,12 @@ import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.stage.FileChooser
 import javafx.stage.Stage
-import research2016.beliefrevisor.core.ComparatorBeliefRevisionStrategy
 import research2016.propositionallogic.And
 import research2016.propositionallogic.Contradiction
-import research2016.propositionallogic.Or
 import research2016.propositionallogic.Proposition
-import research2016.propositionallogic.Situation
-import research2016.propositionallogic.and
 import research2016.propositionallogic.toParsableString
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
-import java.util.Comparator
 
 fun main(args:Array<String>)
 {
@@ -138,13 +133,9 @@ class Gui():Application()
         // when the revision button is clicked, perform a belief revision
         setOnAction()
         {
-            val situationComparatorFactory = fun(initialBeliefState:Set<Proposition>):Comparator<Situation>
-            {
-                return revisionConfigurationPanel.situationComparator(initialBeliefState)
-            }
             val initialBeliefState = initialBeliefStateDisplay.propositions.toSet()
             val sentence = revisionSentencesDisplay.propositions.toList().let {if (it.isEmpty()) Contradiction else And.make(it)}
-            val resultingBeliefState = ComparatorBeliefRevisionStrategy(situationComparatorFactory).revise(initialBeliefState,sentence)
+            val resultingBeliefState = revisionConfigurationPanel.beliefRevisionStrategy.revise(initialBeliefState,sentence)
             resultingBeliefStateDisplay.propositions = resultingBeliefState.toList()
         }
     }

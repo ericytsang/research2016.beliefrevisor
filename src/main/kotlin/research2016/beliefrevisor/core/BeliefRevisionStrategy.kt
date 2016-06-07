@@ -5,7 +5,7 @@ import research2016.propositionallogic.Or
 import research2016.propositionallogic.Proposition
 import research2016.propositionallogic.Situation
 import research2016.propositionallogic.and
-import research2016.propositionallogic.basicPropositions
+import research2016.propositionallogic.variables
 import research2016.propositionallogic.makeFrom
 import research2016.propositionallogic.models
 import research2016.propositionallogic.not
@@ -36,7 +36,7 @@ class ComparatorBeliefRevisionStrategy(val situationSorterFactory:(Set<Propositi
         // e.g. (a or -a) and (b or -b) and (c or -c) and...
         val basicPropositionTautologies = (setOf(sentence)+beliefState)
             // get all basic propositions involved
-            .flatMap {it.basicPropositions}.toSet()
+            .flatMap {it.variables}.toSet()
             // make each one into a tautology
             .map {it or it.not}
             // and them together

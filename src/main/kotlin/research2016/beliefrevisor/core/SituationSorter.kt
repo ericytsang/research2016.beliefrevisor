@@ -88,7 +88,7 @@ class HammingDistanceComparator(beliefState:Set<Proposition>):ByDistanceComparat
     }
 }
 
-class WeightedHammingDistanceComparator(beliefState:Set<Proposition>,val weights:Map<BasicProposition,Int>):ByDistanceComparator()
+class WeightedHammingDistanceComparator(beliefState:Set<Proposition>,val weights:Map<Variable,Int>):ByDistanceComparator()
 {
     private val beliefStateModels = beliefState.models()
 
@@ -122,26 +122,19 @@ class WeightedHammingDistanceComparator(beliefState:Set<Proposition>,val weights
     }
 }
 
-class SetInclusionComparator(val biases:Set<Proposition>):ByDistanceComparator()
+class SetInclusionComparator():BeliefRevisionStrategy
 {
-    override fun computeDistance(situation:Situation):Int
+    override fun revise(beliefState:Set<Proposition>,sentence:Proposition):Set<Proposition>
     {
-        return biases.count {it.truthiness(situation) == 1.0}.let {-it}
+        return beliefState.filterNot {(it and sentence).isContradiction}.plus(sentence).toSet()
     }
 }
 
-class OrderedSetsComparator(val orderedSets:List<Proposition>):ByDistanceComparator()
+class OrderedSetsComparator(val beliefState:Set<Proposition>,val orderedSets:List<Proposition>):ByDistanceComparator()
 {
     override fun computeDistance(situation:Situation):Int
     {
-        val setIndex = orderedSets.indexOfFirst {it.truthiness(situation) == 1.0}
-        return if (setIndex >= 0)
-        {
-            setIndex
-        }
-        else
-        {
-            Int.MAX_VALUE
-        }
+        val completeOrderedSets = listOf(And.make(beliefState.toList()))+orderedSets+Tautology
+        return completeOrderedSets.indexOfFirst {it.truthiness(situation) == 1.0}
     }
 }
