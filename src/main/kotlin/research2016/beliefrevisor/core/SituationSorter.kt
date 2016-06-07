@@ -122,14 +122,6 @@ class WeightedHammingDistanceComparator(beliefState:Set<Proposition>,val weights
     }
 }
 
-class SetInclusionComparator():BeliefRevisionStrategy
-{
-    override fun revise(beliefState:Set<Proposition>,sentence:Proposition):Set<Proposition>
-    {
-        return beliefState.filterNot {(it and sentence).isContradiction}.plus(sentence).toSet()
-    }
-}
-
 class OrderedSetsComparator(val beliefState:Set<Proposition>,val orderedSets:List<Proposition>):ByDistanceComparator()
 {
     override fun computeDistance(situation:Situation):Int

@@ -5,6 +5,8 @@ import research2016.propositionallogic.Or
 import research2016.propositionallogic.Proposition
 import research2016.propositionallogic.Situation
 import research2016.propositionallogic.and
+import research2016.propositionallogic.isContradiction
+import research2016.propositionallogic.isSatisfiable
 import research2016.propositionallogic.variables
 import research2016.propositionallogic.makeFrom
 import research2016.propositionallogic.models
@@ -56,5 +58,13 @@ class ComparatorBeliefRevisionStrategy(val situationSorterFactory:(Set<Propositi
 
         // convert into a conjunctive normal form proposition and return
         return setOf(Or.make(nearestModels.map {Proposition.makeFrom(it)}))
+    }
+}
+
+class SetInclusionBeliefRevisionStrategy():BeliefRevisionStrategy
+{
+    override fun revise(beliefState:Set<Proposition>,sentence:Proposition):Set<Proposition>
+    {
+        return beliefState.plus(sentence).filter {(it and sentence).isSatisfiable}.toSet()
     }
 }
