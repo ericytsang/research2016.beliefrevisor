@@ -9,7 +9,7 @@ import research2016.beliefrevisor.core.BeliefRevisionStrategy
 import research2016.beliefrevisor.core.ComparatorBeliefRevisionStrategy
 import research2016.beliefrevisor.core.HammingDistanceComparator
 import research2016.beliefrevisor.core.OrderedSetsComparator
-import research2016.beliefrevisor.core.SetInclusionBeliefRevisionStrategy
+import research2016.beliefrevisor.core.SatisfiabilityBeliefRevisionStrategy
 import research2016.beliefrevisor.core.WeightedHammingDistanceComparator
 import research2016.propositionallogic.Proposition
 import research2016.propositionallogic.Variable
@@ -202,7 +202,7 @@ class RevisionConfigurationPanel:VBox()
     private class SetInclusionRevisionOperatorOption:RevisionOperatorOption("Set Inclusion")
     {
         override val operatorSettings = null
-        override val beliefRevisionStrategy:BeliefRevisionStrategy = SetInclusionBeliefRevisionStrategy()
+        override val beliefRevisionStrategy:BeliefRevisionStrategy = SatisfiabilityBeliefRevisionStrategy()
     }
 
     private class OrderedSetsRevisionOperatorOption:RevisionOperatorOption("Ordered Sets")

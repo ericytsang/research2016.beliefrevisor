@@ -5,7 +5,6 @@ import research2016.propositionallogic.Or
 import research2016.propositionallogic.Proposition
 import research2016.propositionallogic.Situation
 import research2016.propositionallogic.and
-import research2016.propositionallogic.isContradiction
 import research2016.propositionallogic.isSatisfiable
 import research2016.propositionallogic.variables
 import research2016.propositionallogic.makeFrom
@@ -20,10 +19,10 @@ interface BeliefRevisionStrategy
 }
 
 /**
- * class that uses a [Comparator] to order [Situation]s in order to do create
- * the "total pre-order" for the belief revision.
+ * class that uses an instance of the [Comparator] to order instances of the
+ * [Situation] in order to do the belief revision.
  *
- * the [situationSorterFactory] is used to create the [Comparator]. it will be
+ * @param situationSorterFactory used to create the [Comparator]. it will be
  * given the initial belief state as an argument, and must return the
  * appropriate [Comparator] which will be used to sort the [Situation]s.
  */
@@ -61,7 +60,7 @@ class ComparatorBeliefRevisionStrategy(val situationSorterFactory:(Set<Propositi
     }
 }
 
-class SetInclusionBeliefRevisionStrategy():BeliefRevisionStrategy
+class SatisfiabilityBeliefRevisionStrategy():BeliefRevisionStrategy
 {
     override fun revise(beliefState:Set<Proposition>,sentence:Proposition):Set<Proposition>
     {
