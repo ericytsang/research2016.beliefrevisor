@@ -10,15 +10,15 @@ import javafx.scene.input.KeyCode
 import javafx.scene.layout.HBox
 import javafx.scene.layout.VBox
 
-abstract class EditableListView<E>(private val entryName:String):VBox()
+abstract class EditableListView<Model>(private val entryName:String):VBox()
 {
-    protected abstract fun parse(string:String):E
-    protected abstract fun toInputString(entry:E):String
-    protected abstract fun addToList(existingEntries:MutableList<E>,indexOfEntry:Int,newEntry:E):String?
-    protected abstract fun removeFromList(existingEntries:MutableList<E>,indexOfEntry:Int):String?
-    protected abstract fun updateListAt(existingEntries:MutableList<E>,indexOfEntry:Int,newEntry:E):String?
+    protected abstract fun parse(string:String):Model
+    protected abstract fun toInputString(entry:Model):String
+    protected abstract fun addToList(existingEntries:MutableList<Model>,indexOfEntry:Int,newEntry:Model):String?
+    protected abstract fun removeFromList(existingEntries:MutableList<Model>,indexOfEntry:Int):String?
+    protected abstract fun updateListAt(existingEntries:MutableList<Model>,indexOfEntry:Int,newEntry:Model):String?
 
-    val listView = ListView<E>().apply()
+    val listView = ListView<Model>().apply()
     {
         // allow editing of sentences by double-clicking on them
         onMouseClicked = EventHandler()
@@ -95,7 +95,6 @@ abstract class EditableListView<E>(private val entryName:String):VBox()
                     // try to get input from user again again
                     continue
                 }
-
             }
         }
 
@@ -143,19 +142,46 @@ abstract class EditableListView<E>(private val entryName:String):VBox()
         }
     }
 
-    val addButton = Button("Add new $entryName").apply()
+    val moveUpButton = Button("Move up").apply()
     {
-        onAction = EventHandler {addNewEntry(listView.focusModel.focusedIndex+1)}
-    }
-
-    val insertButton = Button("Insert new $entryName").apply()
-    {
+        // only enable the button when the focused item is valid
         listView.focusModel.focusedIndexProperty().addListener(InvalidationListener()
         {
             isDisable = listView.focusModel.focusedIndex !in listView.items.indices
+                || listView.focusModel.focusedIndex == listView.items.indices.first
         }.apply {invalidated(null)})
 
-        onAction = EventHandler {addNewEntry(listView.focusModel.focusedIndex)}
+        // move the focused item up one position when clicked
+        onAction = EventHandler()
+        {
+            val itemToMove = listView.focusModel.focusedItem
+            val positionToMoveTo = listView.focusModel.focusedIndex-1
+            val positionToRemoveFrom = listView.focusModel.focusedIndex
+            listView.items.removeAt(positionToRemoveFrom)
+            listView.items.add(positionToMoveTo,itemToMove)
+            listView.focusModel.focus(positionToMoveTo)
+        }
+    }
+
+    val moveDownButton = Button("Move down").apply()
+    {
+        // only enable the button when the focused item is valid
+        listView.focusModel.focusedIndexProperty().addListener(InvalidationListener()
+        {
+            isDisable = listView.focusModel.focusedIndex !in listView.items.indices
+                || listView.focusModel.focusedIndex == listView.items.indices.last
+        }.apply {invalidated(null)})
+
+        // move the focused item down one position when clicked
+        onAction = EventHandler()
+        {
+            val itemToMove = listView.focusModel.focusedItem
+            val positionToMoveTo = listView.focusModel.focusedIndex+1
+            val positionToRemoveFrom = listView.focusModel.focusedIndex
+            listView.items.removeAt(positionToRemoveFrom)
+            listView.items.add(positionToMoveTo,itemToMove)
+            listView.focusModel.focus(positionToMoveTo)
+        }
     }
 
     private fun addNewEntry(index:Int)
@@ -232,7 +258,7 @@ abstract class EditableListView<E>(private val entryName:String):VBox()
         val buttons = HBox().apply()
         {
             spacing = Dimens.KEYLINE_SMALL.toDouble()
-            children.addAll(addButton,insertButton)
+            children.addAll(moveUpButton,moveDownButton)
         }
 
         spacing = Dimens.KEYLINE_SMALL.toDouble()

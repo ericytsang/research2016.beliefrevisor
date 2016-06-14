@@ -10,7 +10,10 @@ import javafx.scene.control.ListView
 import javafx.scene.input.KeyCode
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
+import research2016.propositionallogic.And
 import research2016.propositionallogic.Proposition
+import research2016.propositionallogic.makeFrom
+import research2016.propositionallogic.models
 import research2016.propositionallogic.toDnf
 import research2016.propositionallogic.toFullDnf
 
@@ -29,10 +32,11 @@ class BeliefStateOutputPanel(labelText:String):VBox()
          */
         private val displayModeOptions:List<DisplayModeOption> = run()
         {
-            val cnfOption = DisplayModeOption("Conjunctive Normal Form",{proposition:Proposition -> proposition.toDnf()})
-            val fullDnfOption = DisplayModeOption("Full Disjunctive Normal Form",{proposition:Proposition -> proposition.toFullDnf()})
-            val defaultOption = DisplayModeOption("Default",{proposition:Proposition -> proposition})
-            return@run listOf(defaultOption,cnfOption,fullDnfOption)
+            val cnfOption = DisplayModeOption("Conjunctive Normal Form",{it.map {it.toDnf()}})
+            val fullDnfOption = DisplayModeOption("Full Disjunctive Normal Form",{it.map {it.toFullDnf()}})
+            val defaultOption = DisplayModeOption("Default",{it})
+            val modelsOption = DisplayModeOption("Models",{if (it.isNotEmpty()) And.make(it).models.map {Proposition.makeFrom(it)} else emptyList()})
+            return@run listOf(defaultOption,modelsOption,cnfOption,fullDnfOption)
         }
     }
 
@@ -95,7 +99,7 @@ class BeliefStateOutputPanel(labelText:String):VBox()
      * by the [DisplayModeOption] mode selected in the [displayModeComboBox]
      * control.
      */
-    private val propositionsListView = ListView<Proposition>()
+    val propositionsListView = ListView<Proposition>()
         .apply()
         {
             // when delete or backspace key is pressed, remove selected element
@@ -137,7 +141,7 @@ class BeliefStateOutputPanel(labelText:String):VBox()
     private fun updateDisplay()
     {
         val transform = displayModeComboBox.value.transform
-        val displayedPropositions = propositions.map {transform(it)}
+        val displayedPropositions = transform(propositions)
         Platform.runLater()
         {
             propositionsListView.items.clear()
@@ -150,7 +154,7 @@ class BeliefStateOutputPanel(labelText:String):VBox()
      * [transform] is used to convert each element in [propositions] into
      * another to be displayed in the [propositionsListView].
      */
-    private class DisplayModeOption(val name:String,val transform:(Proposition)->Proposition)
+    private class DisplayModeOption(val name:String,val transform:(List<Proposition>)->List<Proposition>)
     {
         override fun toString():String = name
     }

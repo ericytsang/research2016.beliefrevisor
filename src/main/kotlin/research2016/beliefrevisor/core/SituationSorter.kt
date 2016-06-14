@@ -7,21 +7,21 @@ import java.util.LinkedHashMap
 /**
  * [beliefState] is the belief state that is being revised.
  *
- * the [ByDistanceComparator] is a [Comparator] that can compare [Situation]
+ * the [ByDistanceComparator] is a [Comparator] that can compare [State]
  * with one another to specify an ordering.
  *
- * this implementation assumes that each [Situation] is a specific distance away
+ * this implementation assumes that each [State] is a specific distance away
  * from the [beliefState], and implements the [compare] function with this
  * assumption.
  */
-abstract class ByDistanceComparator():Comparator<Situation>
+abstract class ByDistanceComparator(val beliefState:Set<Proposition>):Comparator<State>
 {
     /**
      * all models of the receiver.
      */
-    protected fun Iterable<Proposition>.models():Set<Situation>
+    protected val beliefStateModels:Set<State> = run()
     {
-        return let()
+        beliefState.let()
         {
             if (!it.iterator().hasNext())
             {
@@ -38,95 +38,91 @@ abstract class ByDistanceComparator():Comparator<Situation>
      * used to cache previous calculations produced by the [computeDistance]
      * function.
      */
-    private val cachedCalculations = LinkedHashMap<Situation,Int>()
+    private val cachedCalculations = LinkedHashMap<State,Int>()
 
-    override fun compare(situation1:Situation,situation2:Situation):Int
+    override fun compare(state1:State,state2:State):Int
     {
-        val situation1Distance = cachedCalculations.getOrPut(situation1)
+        val situation1Distance = cachedCalculations.getOrPut(state1)
         {
-            computeDistance(situation1)
+            computeDistance(state1)
         }
-        val situation2Distance = cachedCalculations.getOrPut(situation2)
+        val situation2Distance = cachedCalculations.getOrPut(state2)
         {
-            computeDistance(situation2)
+            computeDistance(state2)
         }
         return situation1Distance-situation2Distance
     }
 
     /**
-     * returns the distance from the [situation] to the [beliefState].
+     * returns the distance from the [state] to the [beliefState].
      */
-    protected abstract fun computeDistance(situation:Situation):Int
+    protected abstract fun computeDistance(state:State):Int
 }
 
-class HammingDistanceComparator(beliefState:Set<Proposition>):ByDistanceComparator()
+class HammingDistanceComparator(beliefState:Set<Proposition>):ByDistanceComparator(beliefState)
 {
-    private val beliefStateModels = beliefState.models()
-
-    override fun computeDistance(situation:Situation):Int
+    override fun computeDistance(state:State):Int
     {
-        return beliefStateModels.map {hammingDistance(situation,it)}.min() ?: 0
+        return beliefStateModels.map {hammingDistance(state,it)}.min() ?: 0
     }
 
     /**
-     * returns the hamming distance between this [situation1] and [situation2];
+     * returns the hamming distance between this [state1] and [state2];
      * the number of mappings of variables to truth values that they do not
      * match.
      */
-    fun hammingDistance(situation1:Situation,situation2:Situation):Int
+    fun hammingDistance(state1:State,state2:State):Int
     {
-        val commonKeys = if (situation1.keys.size < situation2.keys.size)
+        val commonKeys = if (state1.keys.size < state2.keys.size)
         {
-            situation1.keys.intersect(situation2.keys)
+            state1.keys.intersect(state2.keys)
         }
         else
         {
-            situation2.keys.intersect(situation1.keys)
+            state2.keys.intersect(state1.keys)
         }
 
-        return commonKeys.count {situation1[it] != situation2[it]}
+        return commonKeys.count {state1[it] != state2[it]}
     }
 }
 
-class WeightedHammingDistanceComparator(beliefState:Set<Proposition>,val weights:Map<Variable,Int>):ByDistanceComparator()
+class WeightedHammingDistanceComparator(beliefState:Set<Proposition>,val weights:Map<Variable,Int>):ByDistanceComparator(beliefState)
 {
-    private val beliefStateModels = beliefState.models()
-
-    override fun computeDistance(situation:Situation):Int
+    override fun computeDistance(state:State):Int
     {
-        return beliefStateModels.map {weightedHammingDistance(situation,it)}.min() ?: 0
+        return beliefStateModels.map {weightedHammingDistance(state,it)}.min() ?: 0
     }
 
     /**
-     * returns the weighted hamming distance between this [situation1] and
-     * [situation2]; the number of mappings of variables to truth values that
+     * returns the weighted hamming distance between this [state1] and
+     * [state2]; the number of mappings of variables to truth values that
      * they do not match multiplied by their respective weights, then summed
      * together.
      */
-    fun weightedHammingDistance(situation1:Situation,situation2:Situation):Int
+    fun weightedHammingDistance(state1:State,state2:State):Int
     {
-        val commonKeys = if (situation1.keys.size < situation2.keys.size)
+        val commonKeys = if (state1.keys.size < state2.keys.size)
         {
-            situation1.keys.intersect(situation2.keys)
+            state1.keys.intersect(state2.keys)
         }
         else
         {
-            situation2.keys.intersect(situation1.keys)
+            state2.keys.intersect(state1.keys)
         }
 
         return commonKeys
             // only consider the basic propositions that situations disagree on
-            .filter {situation1[it] != situation2[it]}
+            .filter {state1[it] != state2[it]}
             // sum them by their weights
             .sumBy {weights[it] ?: 0}
     }
 }
 
-class OrderedSetsComparator(val beliefState:Set<Proposition>,val orderedSets:List<Proposition>):ByDistanceComparator()
+class OrderedSetsComparator(beliefState:Set<Proposition>,val orderedSets:List<Proposition>):ByDistanceComparator(beliefState)
 {
-    override fun computeDistance(situation:Situation):Int
+    override fun computeDistance(state:State):Int
     {
         val completeOrderedSets = listOf(And.make(beliefState.toList()))+orderedSets+Tautology
-        return completeOrderedSets.indexOfFirst {it.truthiness(situation) == 1.0}
+        return completeOrderedSets.indexOfFirst {it.truthiness(state) == 1.0}
     }
 }

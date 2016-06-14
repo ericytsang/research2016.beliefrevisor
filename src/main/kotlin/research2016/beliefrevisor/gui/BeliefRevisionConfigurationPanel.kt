@@ -1,9 +1,9 @@
 package research2016.beliefrevisor.gui
 
 import com.sun.javafx.collections.ObservableListWrapper
-import javafx.beans.InvalidationListener
 import javafx.scene.Node
 import javafx.scene.control.ComboBox
+import javafx.scene.control.Label
 import javafx.scene.layout.VBox
 import research2016.beliefrevisor.core.BeliefRevisionStrategy
 import research2016.beliefrevisor.core.ComparatorBeliefRevisionStrategy
@@ -17,24 +17,25 @@ import research2016.propositionallogic.makeFrom
 import research2016.propositionallogic.toParsableString
 import java.io.Serializable
 
-class RevisionConfigurationPanel:VBox()
+class BeliefRevisionConfigurationPanel:VBox()
 {
     companion object
     {
+        const val LABEL_TEXT = "Belief Revision Strategy"
         const val SAVE_MAP_WEIGHTED_HAMMING_DISTANCE = "SAVE_MAP_WEIGHTED_HAMMING_DISTANCE"
         const val SAVE_MAP_ORDERED_SETS = "SAVE_MAP_ORDERED_SETS"
     }
 
-    private val hammingDistanceRevisionOperatorOption = HammingDistanceRevisionOperatorOption()
-    private val weightedHammingDistanceRevisionOperatorOption = WeightedHammingDistanceRevisionOperatorOption()
-    private val setInclusionRevisionOperatorOption = SetInclusionRevisionOperatorOption()
-    private val orderedSetsRevisionOperatorOption = OrderedSetsRevisionOperatorOption()
+    private val hammingDistanceRevisionOperatorOption = HammingDistanceOption()
+    private val weightedHammingDistanceRevisionOperatorOption = WeightedHammingDistanceOption()
+    private val setInclusionRevisionOperatorOption = SatisfiabilityOption()
+    private val orderedSetsRevisionOperatorOption = OrderedSetsOption()
 
     /**
-     * [List] of [RevisionOperatorOption]s used in the
+     * [List] of [Option]s used in the
      * [revisionOperatorComboBox] control.
      */
-    private val revisionOperatorOptions:List<RevisionOperatorOption> = run()
+    private val options:List<Option> = run()
     {
         return@run listOf(hammingDistanceRevisionOperatorOption,
             weightedHammingDistanceRevisionOperatorOption,
@@ -51,56 +52,57 @@ class RevisionConfigurationPanel:VBox()
     fun saveToMap():Map<String,Any>
     {
         val saveMap = mutableMapOf<String,Any>()
-        saveMap.put(SAVE_MAP_WEIGHTED_HAMMING_DISTANCE,weightedHammingDistanceRevisionOperatorOption.operatorSettings.listView.items.toList())
-        saveMap.put(SAVE_MAP_ORDERED_SETS,orderedSetsRevisionOperatorOption.operatorSettings.listView.items.toList())
+        saveMap.put(SAVE_MAP_WEIGHTED_HAMMING_DISTANCE,weightedHammingDistanceRevisionOperatorOption.settingsPanel.listView.items.toList())
+        saveMap.put(SAVE_MAP_ORDERED_SETS,orderedSetsRevisionOperatorOption.settingsPanel.listView.items.toList())
         return saveMap
     }
 
     @Suppress("UNCHECKED_CAST")
     fun loadFromMap(saveMap:Map<String,Any>)
     {
-        weightedHammingDistanceRevisionOperatorOption.operatorSettings.listView.items = ObservableListWrapper(saveMap[SAVE_MAP_WEIGHTED_HAMMING_DISTANCE] as List<WeightedHammingDistanceRevisionOperatorOption.Mapping>? ?: emptyList())
-        orderedSetsRevisionOperatorOption.operatorSettings.listView.items = ObservableListWrapper(saveMap[SAVE_MAP_ORDERED_SETS] as List<Proposition>? ?: emptyList())
+        weightedHammingDistanceRevisionOperatorOption.settingsPanel.listView.items = ObservableListWrapper(saveMap[SAVE_MAP_WEIGHTED_HAMMING_DISTANCE] as List<WeightedHammingDistanceOption.Mapping>? ?: emptyList())
+        orderedSetsRevisionOperatorOption.settingsPanel.listView.items = ObservableListWrapper(saveMap[SAVE_MAP_ORDERED_SETS] as List<Proposition>? ?: emptyList())
     }
 
     /**
      * [revisionOperatorComboBox] is used by the user to select which revision
      * operator they would like to use.
      */
-    private val revisionOperatorComboBox = ComboBox<RevisionOperatorOption>()
+    private val revisionOperatorComboBox = ComboBox<Option>()
         .apply()
         {
-            valueProperty().addListener(InvalidationListener()
-            {
-                if (1 in this@RevisionConfigurationPanel.children.indices)
-                {
-                    this@RevisionConfigurationPanel.children.removeAt(1)
-                }
-                value.operatorSettings?.let()
-                {
-                    this@RevisionConfigurationPanel.children.add(it)
-                }
-            })
-            items = ObservableListWrapper(revisionOperatorOptions)
+            items = ObservableListWrapper(options)
             value = items.first()
+            valueProperty().addListener()
+            {
+                observableValue,oldValue,newValue ->
+                oldValue.settingsPanel?.let()
+                {
+                    this@BeliefRevisionConfigurationPanel.children.remove(oldValue.settingsPanel)
+                }
+                newValue.settingsPanel?.let()
+                {
+                    this@BeliefRevisionConfigurationPanel.children.add(it)
+                }
+            }
         }
 
     init
     {
         spacing = Dimens.KEYLINE_SMALL.toDouble()
-        children.addAll(revisionOperatorComboBox)
+        children.addAll(Label(LABEL_TEXT),revisionOperatorComboBox)
     }
 
-    private abstract class RevisionOperatorOption(val name:String)
+    private abstract class Option(val name:String)
     {
-        abstract val operatorSettings:Node?
+        abstract val settingsPanel:Node?
         abstract val beliefRevisionStrategy:BeliefRevisionStrategy
         override fun toString():String = name
     }
 
-    private class  HammingDistanceRevisionOperatorOption:RevisionOperatorOption("Hamming Distance")
+    private class HammingDistanceOption:Option("Hamming Distance")
     {
-        override val operatorSettings:Node? = null
+        override val settingsPanel:Node? = null
         override val beliefRevisionStrategy:BeliefRevisionStrategy
             get()
             {
@@ -112,17 +114,11 @@ class RevisionConfigurationPanel:VBox()
             }
     }
 
-    private class WeightedHammingDistanceRevisionOperatorOption:RevisionOperatorOption("Weighted Hamming Distance")
+    private class WeightedHammingDistanceOption:Option("Weighted Hamming Distance")
     {
 
-        override val operatorSettings = object:EditableListView<Mapping>("mapping")
+        override val settingsPanel = object:EditableListView<Mapping>("mapping")
         {
-            init
-            {
-                listView.minHeight = 100.0
-                listView.prefHeight = listView.minHeight
-            }
-
             override fun parse(string:String):Mapping
             {
                 val subStrings = string.split("=")
@@ -188,7 +184,7 @@ class RevisionConfigurationPanel:VBox()
                 return ComparatorBeliefRevisionStrategy()
                 {
                     initialBeliefState:Set<Proposition> ->
-                    val weights = operatorSettings.listView.items.associate {Variable.make(it.variableName) to it.weight}
+                    val weights = settingsPanel.listView.items.associate {Variable.make(it.variableName) to it.weight}
                     WeightedHammingDistanceComparator(initialBeliefState,weights)
                 }
             }
@@ -199,22 +195,16 @@ class RevisionConfigurationPanel:VBox()
         }
     }
 
-    private class SetInclusionRevisionOperatorOption:RevisionOperatorOption("Set Inclusion")
+    private class SatisfiabilityOption:Option("Satisfiability")
     {
-        override val operatorSettings = null
+        override val settingsPanel = null
         override val beliefRevisionStrategy:BeliefRevisionStrategy = SatisfiabilityBeliefRevisionStrategy()
     }
 
-    private class OrderedSetsRevisionOperatorOption:RevisionOperatorOption("Ordered Sets")
+    private class OrderedSetsOption:Option("Ordered Sets")
     {
-        override val operatorSettings = object:EditableListView<Proposition>("sentence")
+        override val settingsPanel = object:EditableListView<Proposition>("sentence")
         {
-            init
-            {
-                listView.minHeight = 100.0
-                listView.prefHeight = listView.minHeight
-            }
-
             override fun parse(string:String):Proposition
             {
                 return Proposition.makeFrom(string)
@@ -250,7 +240,7 @@ class RevisionConfigurationPanel:VBox()
                 return ComparatorBeliefRevisionStrategy()
                 {
                     initialBeliefState:Set<Proposition> ->
-                    OrderedSetsComparator(initialBeliefState,operatorSettings.listView.items)
+                    OrderedSetsComparator(initialBeliefState,settingsPanel.listView.items)
                 }
             }
     }

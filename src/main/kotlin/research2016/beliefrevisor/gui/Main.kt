@@ -113,29 +113,39 @@ class Gui():Application()
         }
     }
 
-    val revisionConfigurationPanel = RevisionConfigurationPanel()
+    val revisionConfigurationPanel = BeliefRevisionConfigurationPanel()
+
+    val partitionConfigurationPanel = TrustPartitionConfigurationPanel()
 
     val performRevisionButton = Button(PERFORM_REVISION_BUTTON_TEXT).apply()
     {
         // disable this button if there are no formulas specified for the
         // initial belief state, or sentences for revision
-        val listener = object:BeliefStateOutputPanel.Observer()
+        val listener:BeliefStateOutputPanel.Observer = object:BeliefStateOutputPanel.Observer()
         {
             override fun onItemsChanged()
             {
                 isDisable = initialBeliefStateDisplay.propositions.isEmpty() ||
-                    revisionSentencesDisplay.propositions.isEmpty()
+                    revisionSentencesDisplay.propositionsListView.focusModel.focusedItem == null
             }
         }.apply {onItemsChanged()}
         initialBeliefStateDisplay.observers.add(listener)
-        revisionSentencesDisplay.observers.add(listener)
+        revisionSentencesDisplay
+            .propositionsListView
+            .focusModel
+            .focusedItemProperty()
+            .addListener(InvalidationListener()
+            {
+                listener.onItemsChanged()
+            })
 
         // when the revision button is clicked, perform a belief revision
         setOnAction()
         {
-            val initialBeliefState = initialBeliefStateDisplay.propositions.toSet()
-            val sentence = revisionSentencesDisplay.propositions.toList().let {if (it.isEmpty()) Contradiction else And.make(it)}
-            val resultingBeliefState = revisionConfigurationPanel.beliefRevisionStrategy.revise(initialBeliefState,sentence)
+            val initialBeliefState = initialBeliefStateDisplay.propositions
+            val sentenceRevisionStrategy = partitionConfigurationPanel.sentenceRevisionStrategy(And.make(initialBeliefState))
+            val sentence = revisionSentencesDisplay.propositionsListView.focusModel.focusedItem.let {sentenceRevisionStrategy.revise(it)}
+            val resultingBeliefState = revisionConfigurationPanel.beliefRevisionStrategy.revise(initialBeliefState.toSet(),sentence)
             resultingBeliefStateDisplay.propositions = resultingBeliefState.toList()
         }
     }
@@ -185,23 +195,28 @@ class Gui():Application()
 
     val middlePanel = HBox().apply()
     {
+        val centerPanel = VBox(revisionSentencesDisplay,revisionConfigurationPanel)
+        centerPanel.spacing = Dimens.KEYLINE_SMALL.toDouble()
+        VBox.setVgrow(revisionSentencesDisplay,Priority.ALWAYS)
+        VBox.setVgrow(revisionConfigurationPanel,Priority.SOMETIMES)
+
+        val rightPanel = VBox(resultingBeliefStateDisplay,partitionConfigurationPanel)
+        rightPanel.spacing = Dimens.KEYLINE_SMALL.toDouble()
+        VBox.setVgrow(resultingBeliefStateDisplay,Priority.ALWAYS)
+        VBox.setVgrow(partitionConfigurationPanel,Priority.SOMETIMES)
+
         spacing = Dimens.KEYLINE_SMALL.toDouble()
         padding = Insets(Dimens.KEYLINE_SMALL.toDouble())
-        children.addAll(initialBeliefStateDisplay,revisionSentencesDisplay,resultingBeliefStateDisplay)
+        children.addAll(initialBeliefStateDisplay,centerPanel,rightPanel)
         children.forEach {HBox.setHgrow(it,Priority.ALWAYS)}
     }
 
     val bottomPanel = HBox().apply()
     {
-        val buttonPanel = HBox(performRevisionButton,commitRevisionButton)
-        buttonPanel.spacing = Dimens.KEYLINE_SMALL.toDouble()
-        buttonPanel.alignment = Pos.BOTTOM_RIGHT
-
-        HBox.setHgrow(revisionConfigurationPanel,Priority.ALWAYS)
-
+        children.addAll(performRevisionButton,commitRevisionButton)
         spacing = Dimens.KEYLINE_SMALL.toDouble()
         padding = Insets(Dimens.KEYLINE_SMALL.toDouble())
-        children.addAll(revisionConfigurationPanel,buttonPanel)
+        alignment = Pos.BOTTOM_RIGHT
     }
 
     fun saveToFile()

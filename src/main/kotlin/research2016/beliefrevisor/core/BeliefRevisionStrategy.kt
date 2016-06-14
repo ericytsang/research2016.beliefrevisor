@@ -3,7 +3,7 @@ package research2016.beliefrevisor.core
 import research2016.propositionallogic.And
 import research2016.propositionallogic.Or
 import research2016.propositionallogic.Proposition
-import research2016.propositionallogic.Situation
+import research2016.propositionallogic.State
 import research2016.propositionallogic.and
 import research2016.propositionallogic.isSatisfiable
 import research2016.propositionallogic.variables
@@ -20,13 +20,13 @@ interface BeliefRevisionStrategy
 
 /**
  * class that uses an instance of the [Comparator] to order instances of the
- * [Situation] in order to do the belief revision.
+ * [State] in order to do the belief revision.
  *
  * @param situationSorterFactory used to create the [Comparator]. it will be
  * given the initial belief state as an argument, and must return the
- * appropriate [Comparator] which will be used to sort the [Situation]s.
+ * appropriate [Comparator] which will be used to sort the [State]s.
  */
-class ComparatorBeliefRevisionStrategy(val situationSorterFactory:(Set<Proposition>)->Comparator<Situation>):BeliefRevisionStrategy
+class ComparatorBeliefRevisionStrategy(val situationSorterFactory:(Set<Proposition>)->Comparator<State>):BeliefRevisionStrategy
 {
     override fun revise(beliefState:Set<Proposition>,sentence:Proposition):Set<Proposition>
     {
@@ -49,7 +49,7 @@ class ComparatorBeliefRevisionStrategy(val situationSorterFactory:(Set<Propositi
         val sentenceModels = (sentence and basicPropositionTautologies).models
 
         // find the "first" model in the ordering or models O(n)
-        val nearestModel = sentenceModels.minWith(situationSorter)
+        val nearestModel = sentenceModels.minWith(situationSorter) ?: TODO() // todo
 
         // keep only the ones with the least distance according to the sorter
         val nearestModels = sentenceModels
