@@ -1,5 +1,6 @@
 package research2016.beliefrevisor
 
+import research2016.beliefrevisor.core.BeliefRevisionStrategy
 import research2016.beliefrevisor.core.ComparatorBeliefRevisionStrategy
 import research2016.propositionallogic.*
 import java.util.*
@@ -13,9 +14,9 @@ open class RevisionTest
     protected val q = Variable.make("q")
     protected val r = Variable.make("r")
 
-    protected fun reviseTest(beliefState:Set<Proposition>,sentence:Proposition,situationSorterFactory:(Set<Proposition>)-> Comparator<Situation>,expected:Set<Situation>)
+    protected fun reviseTest(beliefState:Set<Proposition>,sentence:Proposition,beliefRevisionStrategy:BeliefRevisionStrategy,expected:Set<State>)
     {
-        val actual = ComparatorBeliefRevisionStrategy(situationSorterFactory)
+        val actual = beliefRevisionStrategy
             .revise(beliefState,sentence)
             .let {And.make(it.toList())}
             .models

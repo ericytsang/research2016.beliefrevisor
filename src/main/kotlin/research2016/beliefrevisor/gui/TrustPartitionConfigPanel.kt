@@ -4,6 +4,7 @@ import com.sun.javafx.collections.ObservableListWrapper
 import javafx.scene.Node
 import javafx.scene.control.ComboBox
 import javafx.scene.control.Label
+import javafx.scene.control.TextInputDialog
 import javafx.scene.layout.VBox
 import research2016.beliefrevisor.core.SentenceRevisionStrategy
 import research2016.beliefrevisor.core.TrustPartitionSentenceRevisionStrategy
@@ -15,8 +16,9 @@ import research2016.propositionallogic.generateFrom
 import research2016.propositionallogic.makeFrom
 import research2016.propositionallogic.not
 import research2016.propositionallogic.toParsableString
+import java.util.Optional
 
-class TrustPartitionConfigurationPanel:VBox()
+class TrustPartitionConfigPanel:VBox()
 {
     companion object
     {
@@ -75,11 +77,11 @@ class TrustPartitionConfigurationPanel:VBox()
                 observableValue,oldValue,newValue ->
                 oldValue.settingsPanel?.let()
                 {
-                    this@TrustPartitionConfigurationPanel.children.remove(oldValue.settingsPanel)
+                    this@TrustPartitionConfigPanel.children.remove(oldValue.settingsPanel)
                 }
                 newValue.settingsPanel?.let()
                 {
-                    this@TrustPartitionConfigurationPanel.children.add(it)
+                    this@TrustPartitionConfigPanel.children.add(it)
                 }
             }
         }
@@ -123,41 +125,53 @@ class TrustPartitionConfigurationPanel:VBox()
 
     private class Variables:Option("Variables")
     {
-        override val settingsPanel = object:EditableListView<Variable>("variable")
+        override val settingsPanel = object:EditableListView<Variable,TextInputDialog,String>()
         {
-            override fun parse(string:String):Variable = Variable.make(string)
-            override fun toInputString(entry:Variable):String = entry.toString()
-
-            override fun addToList(existingEntries:MutableList<Variable>,indexOfEntry:Int,newEntry:Variable):String?
+            override fun tryParseInput(inputDialog:TextInputDialog):Variable
             {
-                return if (newEntry in existingEntries)
+                return Variable.make(inputDialog.result)
+            }
+
+            override fun makeInputDialog(model:Variable?):TextInputDialog
+            {
+                return TextInputDialog(model?.toString())
+                    .apply()
+                    {
+                        headerText = "Enter the variable name below."
+                    }
+            }
+
+            override fun isInputCancelled(result:Optional<String>):Boolean
+            {
+                return !result.isPresent
+            }
+
+            override fun tryAddToListAt(existingEntries:MutableList<Variable>,indexOfEntry:Int,newEntry:Variable)
+            {
+                if (newEntry in existingEntries)
                 {
-                    "\"$newEntry\" already exists."
+                    throw RuntimeException("\"$newEntry\" already exists.")
                 }
                 else
                 {
-                    existingEntries.add(indexOfEntry,newEntry)
-                    null
+                    return existingEntries.add(indexOfEntry,newEntry)
                 }
             }
-
-            override fun removeFromList(existingEntries:MutableList<Variable>,indexOfEntry:Int):String?
+            override fun tryRemoveFromListAt(existingEntries:MutableList<Variable>,indexOfEntry:Int)
             {
                 existingEntries.removeAt(indexOfEntry)
-                return null
             }
 
-            override fun updateListAt(existingEntries:MutableList<Variable>,indexOfEntry:Int,newEntry:Variable):String?
+            override fun tryUpdateListAt(existingEntries:MutableList<Variable>,indexOfEntry:Int,newEntry:Variable)
             {
                 val resultingList = existingEntries.filterIndexed {i,e -> i != indexOfEntry}
                 if (newEntry in resultingList)
                 {
-                    return "\"$newEntry\" already exists."
+                    throw RuntimeException("\"$newEntry\" already exists.")
                 }
                 else
                 {
                     existingEntries[indexOfEntry] = newEntry
-                    return null
                 }
             }
         }
@@ -173,34 +187,22 @@ class TrustPartitionConfigurationPanel:VBox()
 
     private class Propositions:Option("Sentences")
     {
-        override val settingsPanel = object:EditableListView<Proposition>("sentence")
+        override val settingsPanel = object:EditableListView<Proposition,TextInputDialog,String>()
         {
-            override fun parse(string:String):Proposition
+            override fun isInputCancelled(result:Optional<String>):Boolean
             {
-                return Proposition.makeFrom(string)
+                return !result.isPresent
             }
 
-            override fun toInputString(entry:Proposition):String
+            override fun tryParseInput(inputDialog:TextInputDialog):Proposition
             {
-                return entry.toParsableString()
+                return Proposition.makeFrom(inputDialog.result)
             }
 
-            override fun addToList(existingEntries:MutableList<Proposition>,indexOfEntry:Int,newEntry:Proposition):String?
+            override fun makeInputDialog(model:Proposition?):TextInputDialog
             {
-                existingEntries.add(indexOfEntry,newEntry)
-                return null
-            }
-
-            override fun removeFromList(existingEntries:MutableList<Proposition>,indexOfEntry:Int):String?
-            {
-                existingEntries.removeAt(indexOfEntry)
-                return null
-            }
-
-            override fun updateListAt(existingEntries:MutableList<Proposition>,indexOfEntry:Int,newEntry:Proposition):String?
-            {
-                existingEntries[indexOfEntry] = newEntry
-                return null
+                return TextInputDialog(model?.toParsableString())
+                    .apply {headerText = "Enter the sentence below."}
             }
         }
 

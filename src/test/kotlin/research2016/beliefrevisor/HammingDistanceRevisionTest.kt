@@ -1,6 +1,7 @@
 package research2016.beliefrevisor
 
 import org.junit.Test
+import research2016.beliefrevisor.core.ComparatorBeliefRevisionStrategy
 import research2016.beliefrevisor.core.HammingDistanceComparator
 import research2016.propositionallogic.*
 import java.util.*
@@ -19,7 +20,7 @@ class HammingDistanceRevisionTest():RevisionTest()
         val beliefState = setOf(Tautology)
         val sentence = p and q and r
         val expected = (p and q and r).models
-        reviseTest(beliefState,sentence,{HammingDistanceComparator(it)},expected)
+        reviseTest(beliefState,sentence,ComparatorBeliefRevisionStrategy({HammingDistanceComparator(it)}),expected)
     }
 
     /**
@@ -31,7 +32,7 @@ class HammingDistanceRevisionTest():RevisionTest()
         val beliefState = setOf(p or q)
         val sentence = q or r
         val expected = ((p or q) and (q or r)).models
-        reviseTest(beliefState,sentence,{HammingDistanceComparator(it)},expected)
+        reviseTest(beliefState,sentence,ComparatorBeliefRevisionStrategy({HammingDistanceComparator(it)}),expected)
     }
 
     /**
@@ -43,6 +44,6 @@ class HammingDistanceRevisionTest():RevisionTest()
         val beliefState = setOf(p and q)
         val sentence = And.make(beliefState.toList()).not
         val expected = Xor(p,q).models
-        reviseTest(beliefState,sentence,{HammingDistanceComparator(it)},expected)
+        reviseTest(beliefState,sentence,ComparatorBeliefRevisionStrategy({HammingDistanceComparator(it)}),expected)
     }
 }

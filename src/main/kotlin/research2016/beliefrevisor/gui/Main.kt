@@ -1,5 +1,6 @@
 package research2016.beliefrevisor.gui
 
+import com.sun.javafx.collections.ObservableListWrapper
 import javafx.application.Application
 import javafx.beans.InvalidationListener
 import javafx.event.EventHandler
@@ -32,13 +33,8 @@ class Gui():Application()
     companion object
     {
         // GUI strings
-        const val ADD_TO_BELIEF_STATE_BUTTON_TEXT = "Add to Initial Belief State"
-        const val ADD_FOR_BELIEF_REVISION_BUTTON_TEXT = "Add for Belief Revision"
         const val PERFORM_REVISION_BUTTON_TEXT = "Revise"
         const val COMMIT_REVISION_BUTTON_TEXT = "Commit"
-        const val INITIAL_BELIEF_STATE_LABEL_TEXT = "Initial Belief State"
-        const val REVISION_SENTENCES_LABEL_TEXT = "Sentences for Revision"
-        const val RESULTING_BELIEF_STATE_LABEL_TEXT = "Resulting Belief State"
         const val FILE_MENU_TEXT = "File"
         const val SAVE_MENU_ITEM_TEXT = "Save"
         const val LOAD_MENU_ITEM_TEXT = "Load"
@@ -52,117 +48,59 @@ class Gui():Application()
 
     lateinit var primaryStage:Stage
 
-    val initialBeliefStateDisplay = BeliefStateOutputPanel(INITIAL_BELIEF_STATE_LABEL_TEXT)
+    val initialBeliefStateDisplay = RevisionInputBeliefStatePanel()
 
-    val revisionSentencesDisplay = BeliefStateOutputPanel(REVISION_SENTENCES_LABEL_TEXT)
+    val revisionSentencesDisplay = RevisionInputSentencePanel()
 
-    val resultingBeliefStateDisplay = BeliefStateOutputPanel(RESULTING_BELIEF_STATE_LABEL_TEXT)
+    val resultingBeliefStateDisplay = RevisionOutputResultPanel()
 
-    val sentenceTextField = InputPane().apply()
-    {
-        val listener = object:BeliefStateOutputPanel.Observer()
-        {
-            override fun onPropositionDoubleClicked(proposition:Proposition)
-            {
-                sentenceTextField.text = proposition.toParsableString()
-            }
-        }
-        initialBeliefStateDisplay.observers.add(listener)
-        revisionSentencesDisplay.observers.add(listener)
-        resultingBeliefStateDisplay.observers.add(listener)
-    }
+    val revisionConfigurationPanel = RevisionFunctionConfigPanel()
 
-    /**
-     * button that when clicked, indicates that the user wants to add the text
-     * from [sentenceTextField] to belief state.
-     */
-    val addToBeliefStateButton = Button(ADD_TO_BELIEF_STATE_BUTTON_TEXT).apply()
-    {
-        sentenceTextField.sentenceTextField.textProperty().addListener(InvalidationListener()
-        {
-            isDisable = sentenceTextField.sentenceTextField.sentence == null
-        }.apply {invalidated(null)})
-
-        setOnAction()
-        {
-            sentenceTextField.sentenceTextField.sentence?.let()
-            {
-                initialBeliefStateDisplay.propositions += it
-            }
-        }
-    }
-
-    /**
-     * button that when clicked, indicates that the user wants to add the text
-     * from [sentenceTextField] to the [Set] of sentences used for belief
-     * revision.
-     */
-    val addForBeliefRevisionButton = Button(ADD_FOR_BELIEF_REVISION_BUTTON_TEXT).apply()
-    {
-        sentenceTextField.sentenceTextField.textProperty().addListener(InvalidationListener()
-        {
-            isDisable = sentenceTextField.sentenceTextField.sentence == null
-        }.apply {invalidated(null)})
-
-        setOnAction()
-        {
-            sentenceTextField.sentenceTextField.sentence?.let()
-            {
-                revisionSentencesDisplay.propositions += it
-            }
-        }
-    }
-
-    val revisionConfigurationPanel = BeliefRevisionConfigurationPanel()
-
-    val partitionConfigurationPanel = TrustPartitionConfigurationPanel()
+    val partitionConfigurationPanel = TrustPartitionConfigPanel()
 
     val performRevisionButton = Button(PERFORM_REVISION_BUTTON_TEXT).apply()
     {
         // disable this button if there are no formulas specified for the
         // initial belief state, or sentences for revision
-        val listener:BeliefStateOutputPanel.Observer = object:BeliefStateOutputPanel.Observer()
+        val listener = InvalidationListener()
         {
-            override fun onItemsChanged()
-            {
-                isDisable = initialBeliefStateDisplay.propositions.isEmpty() ||
-                    revisionSentencesDisplay.propositionsListView.focusModel.focusedItem == null
-            }
-        }.apply {onItemsChanged()}
-        initialBeliefStateDisplay.observers.add(listener)
-        revisionSentencesDisplay
-            .propositionsListView
-            .focusModel
-            .focusedItemProperty()
-            .addListener(InvalidationListener()
-            {
-                listener.onItemsChanged()
-            })
+            isDisable = !(initialBeliefStateDisplay.listView.listView.focusModel.focusedItem != null
+                && revisionSentencesDisplay.listView.listView.focusModel.focusedItem != null
+                && revisionConfigurationPanel.beliefRevisionStrategy != null)
+        }.apply {invalidated(null)}
+        initialBeliefStateDisplay.listView.listView.focusModel.focusedItemProperty().addListener(listener)
+        revisionSentencesDisplay.listView.listView.focusModel.focusedItemProperty().addListener(listener)
+        revisionConfigurationPanel.listener = listener
 
         // when the revision button is clicked, perform a belief revision
         setOnAction()
         {
-            val initialBeliefState = initialBeliefStateDisplay.propositions
+            val initialBeliefState = initialBeliefStateDisplay.listView.listView.focusModel.focusedItem.propositions.toList()
             val sentenceRevisionStrategy = partitionConfigurationPanel.sentenceRevisionStrategy(And.make(initialBeliefState))
-            val sentence = revisionSentencesDisplay.propositionsListView.focusModel.focusedItem.let {sentenceRevisionStrategy.revise(it)}
-            val resultingBeliefState = revisionConfigurationPanel.beliefRevisionStrategy.revise(initialBeliefState.toSet(),sentence)
-            resultingBeliefStateDisplay.propositions = resultingBeliefState.toList()
+            val sentence = revisionSentencesDisplay.listView.listView.focusModel.focusedItem.let {sentenceRevisionStrategy.revise(it.proposition)}
+            val resultingBeliefState = revisionConfigurationPanel.beliefRevisionStrategy!!.revise(initialBeliefState.toSet(),sentence)
+            resultingBeliefStateDisplay.listView.items.clear()
+            resultingBeliefStateDisplay.listView.items.addAll(resultingBeliefState.toList().let {resultingBeliefStateDisplay.DisplayDecorator(it)})
         }
     }
 
     val commitRevisionButton = Button(COMMIT_REVISION_BUTTON_TEXT).apply()
     {
-        resultingBeliefStateDisplay.observers.add(object:BeliefStateOutputPanel.Observer()
+        resultingBeliefStateDisplay.listView.items.addListener(InvalidationListener()
         {
-            override fun onItemsChanged()
-            {
-                isDisable = resultingBeliefStateDisplay.propositions.isEmpty()
-            }
-        }.apply {onItemsChanged()})
+            o ->
+            isDisable = resultingBeliefStateDisplay.listView.items.isEmpty()
+        }.apply()
+        {
+            invalidated(null)
+        })
 
         setOnAction()
         {
-            initialBeliefStateDisplay.propositions = resultingBeliefStateDisplay.propositions
+            val resultingBeliefState = resultingBeliefStateDisplay.listView.items.first()
+                .let {it.propositions}.toSet()
+                .let {initialBeliefStateDisplay.DisplayDecorator(it)}
+            initialBeliefStateDisplay.listView.listView.items.add(resultingBeliefState)
         }
     }
 
@@ -183,17 +121,7 @@ class Gui():Application()
         menus.addAll(fileMenu)
     }
 
-    val topPanel = VBox().apply()
-    {
-        val buttonPanel = HBox(addToBeliefStateButton,addForBeliefRevisionButton)
-        buttonPanel.spacing = Dimens.KEYLINE_SMALL.toDouble()
-
-        spacing = Dimens.KEYLINE_SMALL.toDouble()
-        padding = Insets(Dimens.KEYLINE_SMALL.toDouble())
-        children.addAll(sentenceTextField,buttonPanel)
-    }
-
-    val middlePanel = HBox().apply()
+    val topPanel = HBox().apply()
     {
         val centerPanel = VBox(revisionSentencesDisplay,revisionConfigurationPanel)
         centerPanel.spacing = Dimens.KEYLINE_SMALL.toDouble()
@@ -227,9 +155,9 @@ class Gui():Application()
         if (file != null)
         {
             val saveMap = mutableMapOf<String,Any>()
-            saveMap.put(SAVE_MAP_INITIAL_BELIEF_STATE,initialBeliefStateDisplay.propositions)
-            saveMap.put(SAVE_MAP_SENTENCES_FOR_REVISION,revisionSentencesDisplay.propositions)
-            saveMap.put(SAVE_MAP_RESULTING_BELIEF_STATE,resultingBeliefStateDisplay.propositions)
+            saveMap.put(SAVE_MAP_INITIAL_BELIEF_STATE,initialBeliefStateDisplay.listView.listView.items.map {it.propositions})
+            saveMap.put(SAVE_MAP_SENTENCES_FOR_REVISION,revisionSentencesDisplay.listView.listView.items.map {it.proposition})
+            saveMap.put(SAVE_MAP_RESULTING_BELIEF_STATE,resultingBeliefStateDisplay.listView.items)
             saveMap.put(SAVE_MAP_BELIEF_REVISION_CONFIGURATION,revisionConfigurationPanel.saveToMap())
             ObjectOutputStream(file.outputStream()).writeObject(saveMap)
         }
@@ -244,9 +172,12 @@ class Gui():Application()
         if (file != null)
         {
             val saveMap = ObjectInputStream(file.inputStream()).readObject() as Map<String,Any>
-            initialBeliefStateDisplay.propositions = saveMap[SAVE_MAP_INITIAL_BELIEF_STATE] as List<Proposition>
-            revisionSentencesDisplay.propositions = saveMap[SAVE_MAP_SENTENCES_FOR_REVISION] as List<Proposition>
-            resultingBeliefStateDisplay.propositions = saveMap[SAVE_MAP_RESULTING_BELIEF_STATE] as List<Proposition>
+            initialBeliefStateDisplay.listView.listView.items.clear()
+            initialBeliefStateDisplay.listView.listView.items.addAll((saveMap[SAVE_MAP_INITIAL_BELIEF_STATE] as List<Set<Proposition>>).map {initialBeliefStateDisplay.DisplayDecorator(it)}.let {ObservableListWrapper(it)})
+            revisionSentencesDisplay.listView.listView.items.clear()
+            revisionSentencesDisplay.listView.listView.items.addAll((saveMap[SAVE_MAP_SENTENCES_FOR_REVISION] as List<Proposition>).map {revisionSentencesDisplay.DisplayDecorator(it)}.let {ObservableListWrapper(it)})
+            resultingBeliefStateDisplay.listView.items.clear()
+            resultingBeliefStateDisplay.listView.items.addAll(saveMap[SAVE_MAP_RESULTING_BELIEF_STATE] as List<RevisionOutputResultPanel.DisplayDecorator>)
             revisionConfigurationPanel.loadFromMap(saveMap[SAVE_MAP_BELIEF_REVISION_CONFIGURATION] as Map<String,Any>)
         }
     }
@@ -260,8 +191,8 @@ class Gui():Application()
         // create layouts to be added to the scene
         val vBox = VBox().apply()
         {
-            VBox.setVgrow(middlePanel,Priority.ALWAYS)
-            children.addAll(menuBar,topPanel,middlePanel,bottomPanel)
+            VBox.setVgrow(topPanel,Priority.ALWAYS)
+            children.addAll(menuBar,topPanel,bottomPanel)
         }
 
         // configure the scene (inside the window)

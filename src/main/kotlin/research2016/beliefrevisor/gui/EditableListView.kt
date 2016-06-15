@@ -4,19 +4,34 @@ import javafx.beans.InvalidationListener
 import javafx.event.EventHandler
 import javafx.scene.control.Alert
 import javafx.scene.control.Button
+import javafx.scene.control.Dialog
 import javafx.scene.control.ListView
-import javafx.scene.control.TextInputDialog
 import javafx.scene.input.KeyCode
 import javafx.scene.layout.HBox
+import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
+import java.util.Optional
 
-abstract class EditableListView<Model>(private val entryName:String):VBox()
+abstract class EditableListView<Model,InputDialog:Dialog<ResultType>,ResultType>:VBox()
 {
-    protected abstract fun parse(string:String):Model
-    protected abstract fun toInputString(entry:Model):String
-    protected abstract fun addToList(existingEntries:MutableList<Model>,indexOfEntry:Int,newEntry:Model):String?
-    protected abstract fun removeFromList(existingEntries:MutableList<Model>,indexOfEntry:Int):String?
-    protected abstract fun updateListAt(existingEntries:MutableList<Model>,indexOfEntry:Int,newEntry:Model):String?
+    protected abstract fun tryParseInput(inputDialog:InputDialog):Model
+    protected abstract fun makeInputDialog(model:Model?):InputDialog
+    protected abstract fun isInputCancelled(result:Optional<ResultType>):Boolean
+
+    protected open fun tryAddToListAt(existingEntries:MutableList<Model>,indexOfEntry:Int,newEntry:Model)
+    {
+        existingEntries.add(indexOfEntry,newEntry)
+    }
+
+    protected open fun tryRemoveFromListAt(existingEntries:MutableList<Model>,indexOfEntry:Int)
+    {
+        existingEntries.removeAt(indexOfEntry)
+    }
+
+    protected open fun tryUpdateListAt(existingEntries:MutableList<Model>,indexOfEntry:Int,newEntry:Model)
+    {
+        existingEntries[indexOfEntry] = newEntry
+    }
 
     val listView = ListView<Model>().apply()
     {
@@ -31,35 +46,24 @@ abstract class EditableListView<Model>(private val entryName:String):VBox()
                 return@EventHandler
             }
 
-            var previousResultString:String? = null
+            val inputDialog = makeInputDialog(focusModel.focusedItem)
             while (true)
             {
-                // show text input dialog to get sentence from user
-                val result = TextInputDialog(previousResultString ?: toInputString(focusModel.focusedItem!!))
-                    .apply()
-                    {
-                        title = "Edit Existing ${entryName.capitalize()}"
-                        headerText = "Please enter the sentence below."
-                    }
+                // show input dialog to get input from user
+                val result = inputDialog
+                    .apply {title = "Edit Existing Entry"}
                     .showAndWait()
 
                 // break if input is cancelled
-                if (!result.isPresent)
+                if (isInputCancelled(result))
                 {
                     break
-                }
-
-                // otherwise, save the input don't have to retype what was already
-                // entered if there is a problem later...
-                else
-                {
-                    previousResultString = result.get()
                 }
 
                 // try to parse input
                 val entry = try
                 {
-                    parse(result.get())
+                    tryParseInput(inputDialog)
                 }
 
                 // there was an exception while parsing the result...show error
@@ -68,8 +72,8 @@ abstract class EditableListView<Model>(private val entryName:String):VBox()
                 {
                     // input format is invalid
                     val alert = Alert(Alert.AlertType.ERROR)
-                    alert.title = "Edit Existing ${entryName.capitalize()}"
-                    alert.headerText = "Invalid format"
+                    alert.title = "Edit Existing Entry"
+                    alert.headerText = "Invalid input format"
                     alert.contentText = ex.message
                     alert.showAndWait()
 
@@ -78,18 +82,18 @@ abstract class EditableListView<Model>(private val entryName:String):VBox()
                 }
 
                 // try to add the entry to the list
-                val errorMessage = updateListAt(items,focusModel.focusedIndex,entry)
-                if (errorMessage == null)
+                try
                 {
+                    tryUpdateListAt(items,focusModel.focusedIndex,entry)
                     break
                 }
-                else
+                catch (ex:Exception)
                 {
                     // constraints not satisfied
                     val alert = Alert(Alert.AlertType.ERROR)
-                    alert.title = "Edit Existing ${entryName.capitalize()}"
-                    alert.headerText = "Unable to update $entryName"
-                    alert.contentText = errorMessage
+                    alert.title = "Edit Existing Entry"
+                    alert.headerText = "Unable to update entry"
+                    alert.contentText = ex.message
                     alert.showAndWait()
 
                     // try to get input from user again again
@@ -107,13 +111,16 @@ abstract class EditableListView<Model>(private val entryName:String):VBox()
                 in setOf(KeyCode.DELETE,KeyCode.BACK_SPACE) ->
                 {
                     // try to remove the entry from the list
-                    removeFromList(items,focusModel.focusedIndex)?.let()
+                    try
                     {
-                        errorMessage ->
+                        tryRemoveFromListAt(items,focusModel.focusedIndex)
+                    }
+                    catch (ex:Exception)
+                    {
                         val alert = Alert(Alert.AlertType.ERROR)
-                        alert.title = "Remove Existing ${entryName.capitalize()}"
-                        alert.headerText = "Unable to remove $entryName"
-                        alert.contentText = errorMessage
+                        alert.title = "Remove Existing Entry"
+                        alert.headerText = "Unable to remove entry"
+                        alert.contentText = ex.message
                         alert.showAndWait()
                     }
                 }
@@ -186,35 +193,24 @@ abstract class EditableListView<Model>(private val entryName:String):VBox()
 
     private fun addNewEntry(index:Int)
     {
-        var previousResultString:String? = null
+        val inputDialog = makeInputDialog(null)
         while (true)
         {
             // show text input dialog to get input from user
-            val result = TextInputDialog(previousResultString ?: "")
-                .apply()
-                {
-                    title = "Add New ${entryName.capitalize()}"
-                    headerText = "Please enter the $entryName below."
-                }
+            val result = inputDialog
+                .apply {title = "Add New Entry"}
                 .showAndWait()
 
             // break if input is cancelled
-            if (!result.isPresent)
+            if (isInputCancelled(result))
             {
                 break
-            }
-
-            // otherwise, save the input don't have to retype what was already
-            // entered if there is a problem later...
-            else
-            {
-                previousResultString = result.get()
             }
 
             // try to parse input
             val entry = try
             {
-                parse(result.get())
+                tryParseInput(inputDialog)
             }
 
             // there was an exception while parsing the result...show error
@@ -223,8 +219,8 @@ abstract class EditableListView<Model>(private val entryName:String):VBox()
             {
                 // input format is invalid
                 val alert = Alert(Alert.AlertType.ERROR)
-                alert.title = "Add New ${entryName.capitalize()}"
-                alert.headerText = "Invalid format"
+                alert.title = "Add New Entry"
+                alert.headerText = "Invalid input format"
                 alert.contentText = ex.message
                 alert.showAndWait()
 
@@ -233,18 +229,18 @@ abstract class EditableListView<Model>(private val entryName:String):VBox()
             }
 
             // try to add the entry to the list
-            val errorMessage = addToList(listView.items,index,entry)
-            if (errorMessage == null)
+            try
             {
+                tryAddToListAt(listView.items,index,entry)
                 break
             }
-            else
+            catch (ex:Exception)
             {
                 // constraints not satisfied
                 val alert = Alert(Alert.AlertType.ERROR)
-                alert.title = "Add New ${entryName.capitalize()}"
+                alert.title = "Add New Entry"
                 alert.headerText = "Constraint error"
-                alert.contentText = errorMessage
+                alert.contentText = ex.message
                 alert.showAndWait()
 
                 // try to get input from user again again
@@ -263,5 +259,6 @@ abstract class EditableListView<Model>(private val entryName:String):VBox()
 
         spacing = Dimens.KEYLINE_SMALL.toDouble()
         children.addAll(listView,buttons)
+        VBox.setVgrow(listView,Priority.ALWAYS)
     }
 }

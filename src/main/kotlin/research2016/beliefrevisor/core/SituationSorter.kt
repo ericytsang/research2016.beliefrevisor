@@ -1,6 +1,8 @@
 package research2016.beliefrevisor.core
 
+import lib.collections.getRandom
 import research2016.propositionallogic.*
+import java.util.Collections
 import java.util.Comparator
 import java.util.LinkedHashMap
 
@@ -120,6 +122,19 @@ class WeightedHammingDistanceComparator(beliefState:Set<Proposition>,val weights
 
 class OrderedSetsComparator(beliefState:Set<Proposition>,val orderedSets:List<Proposition>):ByDistanceComparator(beliefState)
 {
+    companion object
+    {
+        fun makeRandom(beliefState:Set<Proposition>,variables:Set<Variable>,numBuckets:Int):OrderedSetsComparator
+        {
+            val allStates = State.generateFrom(variables)
+                .toMutableList()
+                .apply {Collections.shuffle(this)}
+            val buckets = Array<MutableSet<State>>(numBuckets,{mutableSetOf()})
+            allStates.forEach {buckets.getRandom().add(it)}
+            return OrderedSetsComparator(beliefState,buckets.map {Or.make(it.map {Proposition.makeFrom(it)})})
+        }
+    }
+
     override fun computeDistance(state:State):Int
     {
         val completeOrderedSets = listOf(And.make(beliefState.toList()))+orderedSets+Tautology

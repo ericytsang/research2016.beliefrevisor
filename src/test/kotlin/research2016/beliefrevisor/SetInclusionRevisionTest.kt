@@ -18,7 +18,7 @@ class SetInclusionRevisionTest():RevisionTest()
         val beliefState = setOf(Tautology)
         val sentence = p and q and r
         val expected = (p and q and r).models
-        reviseTest(beliefState,sentence,{SatisfiabilityBeliefRevisionStrategy(it)},expected)
+        reviseTest(beliefState,sentence,SatisfiabilityBeliefRevisionStrategy(),expected)
     }
 
     /**
@@ -30,7 +30,7 @@ class SetInclusionRevisionTest():RevisionTest()
         val beliefState = setOf(p or q)
         val sentence = q or r
         val expected = ((p or q) and (q or r)).models
-        reviseTest(beliefState,sentence,{SatisfiabilityBeliefRevisionStrategy(it)},expected)
+        reviseTest(beliefState,sentence,SatisfiabilityBeliefRevisionStrategy(),expected)
     }
 
     /**
@@ -42,6 +42,6 @@ class SetInclusionRevisionTest():RevisionTest()
         val beliefState = setOf(p and q)
         val sentence = And.make(beliefState.toList()).not
         val expected = sentence.models
-        reviseTest(beliefState,sentence,{SatisfiabilityBeliefRevisionStrategy(it)},expected)
+        reviseTest(beliefState,sentence,SatisfiabilityBeliefRevisionStrategy(),expected)
     }
 }

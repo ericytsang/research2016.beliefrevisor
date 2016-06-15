@@ -1,6 +1,7 @@
 package research2016.beliefrevisor
 
 import org.junit.Test
+import research2016.beliefrevisor.core.ComparatorBeliefRevisionStrategy
 import research2016.beliefrevisor.core.WeightedHammingDistanceComparator
 import research2016.propositionallogic.*
 import java.util.*
@@ -19,7 +20,7 @@ class WeightedHammingDistanceRevisionTest():RevisionTest()
         val beliefState = setOf(Tautology)
         val sentence = p and q and r
         val expected = (p and q and r).models
-        reviseTest(beliefState,sentence,{WeightedHammingDistanceComparator(it,mapOf(p to 3,q to 2,r to 1))},expected)
+        reviseTest(beliefState,sentence,ComparatorBeliefRevisionStrategy({WeightedHammingDistanceComparator(it,mapOf(p to 3,q to 2,r to 1))}),expected)
     }
 
     /**
@@ -31,7 +32,7 @@ class WeightedHammingDistanceRevisionTest():RevisionTest()
         val beliefState = setOf(p or q)
         val sentence = q or r
         val expected = ((p or q) and (q or r)).models
-        reviseTest(beliefState,sentence,{WeightedHammingDistanceComparator(it,mapOf(p to 3,q to 2,r to 1))},expected)
+        reviseTest(beliefState,sentence,ComparatorBeliefRevisionStrategy({WeightedHammingDistanceComparator(it,mapOf(p to 3,q to 2,r to 1))}),expected)
     }
 
     /**
@@ -43,6 +44,6 @@ class WeightedHammingDistanceRevisionTest():RevisionTest()
         val beliefState = setOf(p and q)
         val sentence = And.make(beliefState.toList()).not
         val expected = (p and q.not).models
-        reviseTest(beliefState,sentence,{WeightedHammingDistanceComparator(it,mapOf(p to 3,q to 2,r to 1))},expected)
+        reviseTest(beliefState,sentence,ComparatorBeliefRevisionStrategy({WeightedHammingDistanceComparator(it,mapOf(p to 3,q to 2,r to 1))}),expected)
     }
 }
