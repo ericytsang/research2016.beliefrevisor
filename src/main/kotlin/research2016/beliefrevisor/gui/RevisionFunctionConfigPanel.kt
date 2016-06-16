@@ -1,9 +1,11 @@
 package research2016.beliefrevisor.gui
 
 import com.sun.javafx.collections.ObservableListWrapper
+import javafx.application.Platform
 import javafx.beans.InvalidationListener
 import javafx.event.EventHandler
 import javafx.scene.Node
+import javafx.scene.Parent
 import javafx.scene.control.Alert
 import javafx.scene.control.Button
 import javafx.scene.control.ButtonType
@@ -67,8 +69,8 @@ class RevisionFunctionConfigPanel():VBox()
     fun saveToMap():Map<String,Any>
     {
         val saveMap = mutableMapOf<String,Any>()
-        saveMap.put(SAVE_MAP_WEIGHTED_HAMMING_DISTANCE,weightedHammingDistanceRevisionOperatorOption.settingsPanel.listView.items.toList())
-        saveMap.put(SAVE_MAP_ORDERED_SETS,orderedSetsRevisionOperatorOption.settingsPanel.listView.items.toList())
+        saveMap.put(SAVE_MAP_WEIGHTED_HAMMING_DISTANCE,weightedHammingDistanceRevisionOperatorOption.settingsPanel.listView.items.toList() as Serializable)
+        saveMap.put(SAVE_MAP_ORDERED_SETS,orderedSetsRevisionOperatorOption.settingsPanel.listView.items.map {it.map {it}} as Serializable)
         return saveMap
     }
 
@@ -136,6 +138,12 @@ class RevisionFunctionConfigPanel():VBox()
     {
         override val settingsPanel = object:EditableListView<Mapping,TextInputDialog,String>()
         {
+            init
+            {
+                prefHeight = 100.0
+                minHeight = prefHeight
+            }
+
             override fun tryParseInput(inputDialog:TextInputDialog):Mapping
             {
                 val subStrings = inputDialog.result.split("=")
@@ -224,6 +232,12 @@ class RevisionFunctionConfigPanel():VBox()
     {
         override val settingsPanel = object:EditableListView<List<Proposition>,Alert,ButtonType>()
         {
+            init
+            {
+                prefHeight = 100.0
+                minHeight = prefHeight
+            }
+
             override fun tryParseInput(inputDialog:Alert):List<Proposition>
             {
                 @Suppress("UNCHECKED_CAST")
@@ -238,6 +252,13 @@ class RevisionFunctionConfigPanel():VBox()
                     buttonTypes.addAll(ButtonType.CANCEL,ButtonType.OK)
                     headerText = "Enter sentences below."
                     dialogPane.content = makeInputDialogContent(model)
+                    onShown = EventHandler()
+                    {
+                        Platform.runLater()
+                        {
+                            ((dialogPane.content as Parent).childrenUnmodifiable.first() as Parent).childrenUnmodifiable.first().requestFocus()
+                        }
+                    }
                 }
             }
 
@@ -272,96 +293,58 @@ class RevisionFunctionConfigPanel():VBox()
                 override fun makeInputDialog(model:Proposition?):TextInputDialog
                 {
                     return TextInputDialog(model?.toParsableString())
-                        .apply {headerText = "Enter the sentence below."}
+                        .apply()
+                        {
+                            headerText = "Enter the sentence below."
+                        }
                 }
             }
             val makeRandomButton = Button(BUTTON_MAKE_RANDOMORDERED_SET).apply()
             {
                 onAction = EventHandler()
                 {
-                    val variablesTextInputDialog = TextInputDialog()
-                        .apply()
-                        {
-                            title = "Generate Random Ordering"
-                            headerText = "Enter a comma separated list of all the variables below."
-                        }
-                    val numBucketsTextInputDialog = TextInputDialog()
-                        .apply()
-                        {
-                            title = "Generate Random Ordering"
-                            headerText = "Enter the number of buckets to sort generated states into."
-                        }
+                    val dialogTitles = "Generate Random Ordering"
+                    val variablesPrompt = "Enter a comma separated list of all the variables below."
+                    val variablesParser = {string:String -> string.split(",").map {Variable.make(it.trim())}.toSet()}
+                    val numBucketsPrompt = "Enter the number of buckets to sort generated states into."
+                    val numBucketsParser = {string:String -> string.toInt()}
 
-                    var variables:Set<Variable>? = null
-                    var numBuckets:Int? = null
+                    // get input from user
+                    val variables:Set<Variable> = getInputByTextInputDialog(dialogTitles,variablesPrompt,variablesParser) ?: return@EventHandler
+                    val numBuckets:Int = getInputByTextInputDialog(dialogTitles,numBucketsPrompt,numBucketsParser) ?: return@EventHandler
 
-                    while (true)
-                    {
-                        // get the variables input
-                        val variablesTextInput = variablesTextInputDialog.showAndWait()
-
-                        // abort if the operation is cancelled
-                        if (!variablesTextInput.isPresent)
-                        {
-                            return@EventHandler
-                        }
-
-                        // try to parse the input
-                        try
-                        {
-                            variables = variablesTextInput.get().split(",").map {Variable.make(it.trim())}.toSet()
-                            break
-                        }
-
-                        // continue if parsing fails
-                        catch (ex:Exception)
-                        {
-                            val error = Alert(Alert.AlertType.ERROR)
-                            error.title = "Generate Random Ordering"
-                            error.headerText = "Failed to parse text input"
-                            error.contentText = ex.message
-                            error.showAndWait()
-                            continue
-                        }
-                    }
-
-                    while (true)
-                    {
-                        // get the num buckets input
-                        val numBucketsTextInput = numBucketsTextInputDialog.showAndWait()
-
-                        // abort if the operation is cancelled
-                        if (!numBucketsTextInput.isPresent)
-                        {
-                            return@EventHandler
-                        }
-
-                        // try to parse the input
-                        try
-                        {
-                            numBuckets = numBucketsTextInput.get().toInt()
-                            break
-                        }
-
-                        // continue if parsing fails
-                        catch (ex:Exception)
-                        {
-                            val error = Alert(Alert.AlertType.ERROR)
-                            error.title = "Generate Random Ordering"
-                            error.headerText = "Failed to parse text input"
-                            error.contentText = ex.message
-                            error.showAndWait()
-                            continue
-                        }
-                    }
-
-                    val allStates = State.generateFrom(variables!!)
+                    // randomized list of all possible states involving all
+                    // variables in variables represented by variable
+                    // conjunctions.
+                    val allStates = State.generateFrom(variables)
+                        .map {Proposition.makeFrom(it)}
                         .toMutableList()
                         .apply {Collections.shuffle(this)}
-                    val buckets = Array<MutableSet<State>>(numBuckets!!,{mutableSetOf()})
-                    allStates.forEach {buckets.getRandom().add(it)}
+                        .iterator()
+
+                    // create numBucket dnf sentences that are  elements in
+                    // allStates concatenated with OR operators.
+                    val dnfSentences = Array<MutableSet<Proposition>>(numBuckets,{mutableSetOf()})
+                        .apply()
+                        {
+                            for (i in indices)
+                            {
+                                if (allStates.hasNext())
+                                {
+                                    this[i].add(allStates.next())
+                                }
+                                else
+                                {
+                                    break
+                                }
+                            }
+                            allStates.forEach {getRandom().add(it)}
+                        }
+                        .filter {it.isNotEmpty()}.map {Or.make(it.toList())}
+
+                    // add all the dnf sentences to the listView.
                     listview.listView.items.clear()
-                    listview.listView.items.addAll(buckets.filter {it.isNotEmpty()}.map {Or.make(it.map {Proposition.makeFrom(it)})})
+                    listview.listView.items.addAll(dnfSentences)
                 }
             }
             return VBox().apply()
@@ -392,6 +375,46 @@ class RevisionFunctionConfigPanel():VBox()
             else
             {
                 return null
+            }
+        }
+    }
+
+    private fun <R> getInputByTextInputDialog(dialogTitle:String,promptText:String,parseInput:(String)->R):R?
+    {
+        val textInputDialog = TextInputDialog().apply()
+        {
+            title = dialogTitle
+            headerText = promptText
+        }
+
+        while (true)
+        {
+            // get the variables input
+            val result = textInputDialog.showAndWait()
+
+            // abort if the operation is cancelled
+            if (!result.isPresent)
+            {
+                return null
+            }
+
+            // try to parse the input
+            try
+            {
+                return parseInput(result.get())
+            }
+
+            // continue if parsing fails
+            catch (ex:Exception)
+            {
+                Alert(Alert.AlertType.ERROR).apply()
+                {
+                    title = dialogTitle
+                    headerText = "Failed to parse text input."
+                    contentText = ex.message
+                    showAndWait()
+                }
+                continue
             }
         }
     }

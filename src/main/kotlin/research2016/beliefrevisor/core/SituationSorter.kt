@@ -138,6 +138,6 @@ class OrderedSetsComparator(beliefState:Set<Proposition>,val orderedSets:List<Pr
     override fun computeDistance(state:State):Int
     {
         val completeOrderedSets = listOf(And.make(beliefState.toList()))+orderedSets+Tautology
-        return completeOrderedSets.indexOfFirst {it.truthiness(state) == 1.0}
+        return completeOrderedSets.indexOfFirst {(it and Proposition.makeFrom(state)).isSatisfiable}
     }
 }

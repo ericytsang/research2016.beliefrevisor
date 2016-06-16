@@ -1,5 +1,7 @@
 package research2016.beliefrevisor.gui
 
+import javafx.application.Platform
+import javafx.event.EventHandler
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonType
 import javafx.scene.control.Label
@@ -44,20 +46,26 @@ class RevisionInputBeliefStatePanel:VBox()
             {
                 headerText = "Editing belief state."
                 buttonTypes.addAll(ButtonType.CANCEL,ButtonType.OK)
-                dialogPane.content = makePropositionListView()
-                    .apply()
+                dialogPane.content = makePropositionListView().apply()
+                {
+                    if (model?.propositions?.isNotEmpty() == true)
                     {
-                        if (model?.propositions?.isNotEmpty() == true)
-                        {
-                            listView.items.addAll(model!!.propositions)
-                        }
+                        listView.items.addAll(model!!.propositions)
                     }
+                }
+                onShown = EventHandler()
+                {
+                    Platform.runLater()
+                    {
+                        (dialogPane.content as EditableListView<*,*,*>).listView.requestFocus()
+                    }
+                }
             }
         }
 
         override fun isInputCancelled(result:Optional<ButtonType>):Boolean
         {
-            return result.get() != ButtonType.OK
+            return result.get() in setOf(ButtonType.CANCEL,ButtonType.CLOSE)
         }
     }
 

@@ -191,6 +191,21 @@ abstract class EditableListView<Model,InputDialog:Dialog<ResultType>,ResultType>
         }
     }
 
+    val addButton = Button("Add").apply()
+    {
+        onAction = EventHandler()
+        {
+            if (listView.focusModel.focusedItem != null)
+            {
+                addNewEntry(listView.focusModel.focusedIndex+1)
+            }
+            else
+            {
+                addNewEntry(0)
+            }
+        }
+    }
+
     private fun addNewEntry(index:Int)
     {
         val inputDialog = makeInputDialog(null)
@@ -254,7 +269,7 @@ abstract class EditableListView<Model,InputDialog:Dialog<ResultType>,ResultType>
         val buttons = HBox().apply()
         {
             spacing = Dimens.KEYLINE_SMALL.toDouble()
-            children.addAll(moveUpButton,moveDownButton)
+            children.addAll(moveUpButton,moveDownButton,addButton)
         }
 
         spacing = Dimens.KEYLINE_SMALL.toDouble()

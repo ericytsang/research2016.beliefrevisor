@@ -16,12 +16,10 @@ import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.stage.FileChooser
 import javafx.stage.Stage
-import research2016.propositionallogic.And
-import research2016.propositionallogic.Contradiction
 import research2016.propositionallogic.Proposition
-import research2016.propositionallogic.toParsableString
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
+import java.io.Serializable
 
 fun main(args:Array<String>)
 {
@@ -44,6 +42,7 @@ class Gui():Application()
         const val SAVE_MAP_SENTENCES_FOR_REVISION = "SAVE_MAP_SENTENCES_FOR_REVISION"
         const val SAVE_MAP_RESULTING_BELIEF_STATE = "SAVE_MAP_RESULTING_BELIEF_STATE"
         const val SAVE_MAP_BELIEF_REVISION_CONFIGURATION = "SAVE_MAP_BELIEF_REVISION_CONFIGURATION"
+        const val SAVE_MAP_TRUST_PARTITION_CONFIGURATION = "SAVE_MAP_TRUST_PARTITION_CONFIGURATION"
     }
 
     lateinit var primaryStage:Stage
@@ -66,17 +65,19 @@ class Gui():Application()
         {
             isDisable = !(initialBeliefStateDisplay.listView.listView.focusModel.focusedItem != null
                 && revisionSentencesDisplay.listView.listView.focusModel.focusedItem != null
-                && revisionConfigurationPanel.beliefRevisionStrategy != null)
+                && revisionConfigurationPanel.beliefRevisionStrategy != null
+                && partitionConfigurationPanel.sentenceRevisionStrategy != null)
         }.apply {invalidated(null)}
         initialBeliefStateDisplay.listView.listView.focusModel.focusedItemProperty().addListener(listener)
         revisionSentencesDisplay.listView.listView.focusModel.focusedItemProperty().addListener(listener)
         revisionConfigurationPanel.listener = listener
+        partitionConfigurationPanel.listener = listener
 
         // when the revision button is clicked, perform a belief revision
         setOnAction()
         {
             val initialBeliefState = initialBeliefStateDisplay.listView.listView.focusModel.focusedItem.propositions.toList()
-            val sentenceRevisionStrategy = partitionConfigurationPanel.sentenceRevisionStrategy(And.make(initialBeliefState))
+            val sentenceRevisionStrategy = partitionConfigurationPanel.sentenceRevisionStrategy!!
             val sentence = revisionSentencesDisplay.listView.listView.focusModel.focusedItem.let {sentenceRevisionStrategy.revise(it.proposition)}
             val resultingBeliefState = revisionConfigurationPanel.beliefRevisionStrategy!!.revise(initialBeliefState.toSet(),sentence)
             resultingBeliefStateDisplay.listView.items.clear()
@@ -123,21 +124,22 @@ class Gui():Application()
 
     val topPanel = HBox().apply()
     {
-        val centerPanel = VBox(revisionSentencesDisplay,revisionConfigurationPanel)
-        centerPanel.spacing = Dimens.KEYLINE_SMALL.toDouble()
-        VBox.setVgrow(revisionSentencesDisplay,Priority.ALWAYS)
-        VBox.setVgrow(revisionConfigurationPanel,Priority.SOMETIMES)
-
-        val rightPanel = VBox(resultingBeliefStateDisplay,partitionConfigurationPanel)
-        rightPanel.spacing = Dimens.KEYLINE_SMALL.toDouble()
-        VBox.setVgrow(resultingBeliefStateDisplay,Priority.ALWAYS)
-        VBox.setVgrow(partitionConfigurationPanel,Priority.SOMETIMES)
-
         spacing = Dimens.KEYLINE_SMALL.toDouble()
         padding = Insets(Dimens.KEYLINE_SMALL.toDouble())
-        children.addAll(initialBeliefStateDisplay,centerPanel,rightPanel)
+        children.addAll(initialBeliefStateDisplay,revisionSentencesDisplay,resultingBeliefStateDisplay)
         children.forEach {HBox.setHgrow(it,Priority.ALWAYS)}
     }
+
+    val middlePanel = HBox().apply()
+    {
+        children.addAll(revisionConfigurationPanel,partitionConfigurationPanel)
+        spacing = Dimens.KEYLINE_SMALL.toDouble()
+        padding = Insets(Dimens.KEYLINE_SMALL.toDouble())
+
+        HBox.setHgrow(revisionConfigurationPanel,Priority.ALWAYS)
+        HBox.setHgrow(partitionConfigurationPanel,Priority.ALWAYS)
+    }
+
 
     val bottomPanel = HBox().apply()
     {
@@ -155,11 +157,16 @@ class Gui():Application()
         if (file != null)
         {
             val saveMap = mutableMapOf<String,Any>()
-            saveMap.put(SAVE_MAP_INITIAL_BELIEF_STATE,initialBeliefStateDisplay.listView.listView.items.map {it.propositions})
-            saveMap.put(SAVE_MAP_SENTENCES_FOR_REVISION,revisionSentencesDisplay.listView.listView.items.map {it.proposition})
-            saveMap.put(SAVE_MAP_RESULTING_BELIEF_STATE,resultingBeliefStateDisplay.listView.items)
-            saveMap.put(SAVE_MAP_BELIEF_REVISION_CONFIGURATION,revisionConfigurationPanel.saveToMap())
-            ObjectOutputStream(file.outputStream()).writeObject(saveMap)
+            saveMap.put(SAVE_MAP_INITIAL_BELIEF_STATE,initialBeliefStateDisplay.listView.listView.items.map {it.propositions} as Serializable)
+            saveMap.put(SAVE_MAP_SENTENCES_FOR_REVISION,revisionSentencesDisplay.listView.listView.items.map {it.proposition} as Serializable)
+            saveMap.put(SAVE_MAP_RESULTING_BELIEF_STATE,resultingBeliefStateDisplay.listView.items.map {it.propositions} as Serializable)
+            saveMap.put(SAVE_MAP_BELIEF_REVISION_CONFIGURATION,revisionConfigurationPanel.saveToMap() as Serializable)
+            saveMap.put(SAVE_MAP_TRUST_PARTITION_CONFIGURATION,partitionConfigurationPanel.saveToMap() as Serializable)
+            ObjectOutputStream(file.outputStream()).apply()
+            {
+                writeObject(saveMap)
+                close()
+            }
         }
     }
 
@@ -171,14 +178,17 @@ class Gui():Application()
         val file = fileChooser.showOpenDialog(primaryStage)
         if (file != null)
         {
-            val saveMap = ObjectInputStream(file.inputStream()).readObject() as Map<String,Any>
+            val objIns = ObjectInputStream(file.inputStream())
+            val saveMap = objIns.readObject() as Map<String,Any>
+            objIns.close()
             initialBeliefStateDisplay.listView.listView.items.clear()
             initialBeliefStateDisplay.listView.listView.items.addAll((saveMap[SAVE_MAP_INITIAL_BELIEF_STATE] as List<Set<Proposition>>).map {initialBeliefStateDisplay.DisplayDecorator(it)}.let {ObservableListWrapper(it)})
             revisionSentencesDisplay.listView.listView.items.clear()
             revisionSentencesDisplay.listView.listView.items.addAll((saveMap[SAVE_MAP_SENTENCES_FOR_REVISION] as List<Proposition>).map {revisionSentencesDisplay.DisplayDecorator(it)}.let {ObservableListWrapper(it)})
             resultingBeliefStateDisplay.listView.items.clear()
-            resultingBeliefStateDisplay.listView.items.addAll(saveMap[SAVE_MAP_RESULTING_BELIEF_STATE] as List<RevisionOutputResultPanel.DisplayDecorator>)
+            resultingBeliefStateDisplay.listView.items.addAll((saveMap[SAVE_MAP_RESULTING_BELIEF_STATE] as List<List<Proposition>>).map {resultingBeliefStateDisplay.DisplayDecorator(it)})
             revisionConfigurationPanel.loadFromMap(saveMap[SAVE_MAP_BELIEF_REVISION_CONFIGURATION] as Map<String,Any>)
+            partitionConfigurationPanel.loadFromMap(saveMap[SAVE_MAP_TRUST_PARTITION_CONFIGURATION] as Map<String,Any>)
         }
     }
 
@@ -192,7 +202,7 @@ class Gui():Application()
         val vBox = VBox().apply()
         {
             VBox.setVgrow(topPanel,Priority.ALWAYS)
-            children.addAll(menuBar,topPanel,bottomPanel)
+            children.addAll(menuBar,topPanel,middlePanel,bottomPanel)
         }
 
         // configure the scene (inside the window)
