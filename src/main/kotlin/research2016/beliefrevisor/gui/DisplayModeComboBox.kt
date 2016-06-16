@@ -21,7 +21,7 @@ class DisplayModeComboBox:ComboBox<DisplayModeComboBox.Option>()
          */
         private val options:List<Option> = run()
         {
-            val cnfOption = Option("Conjunctive Normal Form",{it.map {it.toDnf()}})
+            val cnfOption = Option("Disjunctive Normal Form",{it.map {it.toDnf()}})
             val fullDnfOption = Option("Full Disjunctive Normal Form",{it.map {it.toFullDnf()}})
             val defaultOption = Option("Default",{it})
             val modelsOption = Option("Models",{if (it.isNotEmpty()) And.make(it).models.map {Proposition.makeFrom(it)} else emptyList()})
