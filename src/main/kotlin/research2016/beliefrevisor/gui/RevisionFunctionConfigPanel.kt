@@ -12,6 +12,7 @@ import javafx.scene.control.ButtonType
 import javafx.scene.control.ComboBox
 import javafx.scene.control.Label
 import javafx.scene.control.TextInputDialog
+import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import lib.collections.getRandom
 import research2016.beliefrevisor.core.BeliefRevisionStrategy
@@ -140,8 +141,7 @@ class RevisionFunctionConfigPanel():VBox()
         {
             init
             {
-                prefHeight = 100.0
-                minHeight = prefHeight
+                VBox.setVgrow(this,Priority.ALWAYS)
             }
 
             override fun tryParseInput(inputDialog:TextInputDialog):Mapping
@@ -234,8 +234,7 @@ class RevisionFunctionConfigPanel():VBox()
         {
             init
             {
-                prefHeight = 100.0
-                minHeight = prefHeight
+                VBox.setVgrow(this,Priority.ALWAYS)
             }
 
             override fun tryParseInput(inputDialog:Alert):List<Proposition>

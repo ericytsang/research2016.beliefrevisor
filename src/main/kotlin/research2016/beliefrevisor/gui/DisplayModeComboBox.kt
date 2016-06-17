@@ -21,10 +21,10 @@ class DisplayModeComboBox:ComboBox<DisplayModeComboBox.Option>()
          */
         private val options:List<Option> = run()
         {
-            val cnfOption = Option("Disjunctive Normal Form",{it.map {it.toDnf()}})
-            val fullDnfOption = Option("Full Disjunctive Normal Form",{it.map {it.toFullDnf()}})
-            val defaultOption = Option("Default",{it})
-            val modelsOption = Option("Models",{if (it.isNotEmpty()) And.make(it).models.map {Proposition.makeFrom(it)} else emptyList()})
+            val cnfOption = Option("Disjunctive Normal Form",{it.map {it.toDnf().toString()}})
+            val fullDnfOption = Option("Full Disjunctive Normal Form",{it.map {it.toFullDnf().toString()}})
+            val defaultOption = Option("Default",{it.map {it.toString()}})
+            val modelsOption = Option("Models",{if (it.isNotEmpty()) And.make(it).models.map {it.toString()} else emptyList()})
             return@run listOf(defaultOption,modelsOption,cnfOption,fullDnfOption)
         }
     }
@@ -33,7 +33,7 @@ class DisplayModeComboBox:ComboBox<DisplayModeComboBox.Option>()
      * [name] is displayed directly in the [displayModeComboBox] control.
      * [transform] is unused within this class.
      */
-    class Option(val name:String,val transform:(List<Proposition>)->List<Proposition>)
+    class Option(val name:String,val transform:(List<Proposition>)->List<String>)
     {
         override fun toString():String = name
     }

@@ -124,20 +124,26 @@ class Gui():Application()
 
     val topPanel = HBox().apply()
     {
+        val leftPanel = VBox().apply()
+        {
+            spacing = Dimens.KEYLINE_SMALL.toDouble()
+            children.addAll(initialBeliefStateDisplay,revisionConfigurationPanel)
+            VBox.setVgrow(initialBeliefStateDisplay,Priority.ALWAYS)
+            VBox.setVgrow(revisionConfigurationPanel,Priority.SOMETIMES)
+        }
+
+        val centerPanel = VBox().apply()
+        {
+            spacing = Dimens.KEYLINE_SMALL.toDouble()
+            children.addAll(revisionSentencesDisplay,partitionConfigurationPanel)
+            VBox.setVgrow(revisionSentencesDisplay,Priority.ALWAYS)
+            VBox.setVgrow(partitionConfigurationPanel,Priority.SOMETIMES)
+        }
+
         spacing = Dimens.KEYLINE_SMALL.toDouble()
         padding = Insets(Dimens.KEYLINE_SMALL.toDouble())
-        children.addAll(initialBeliefStateDisplay,revisionSentencesDisplay,resultingBeliefStateDisplay)
+        children.addAll(leftPanel,centerPanel,resultingBeliefStateDisplay)
         children.forEach {HBox.setHgrow(it,Priority.ALWAYS)}
-    }
-
-    val middlePanel = HBox().apply()
-    {
-        children.addAll(revisionConfigurationPanel,partitionConfigurationPanel)
-        spacing = Dimens.KEYLINE_SMALL.toDouble()
-        padding = Insets(Dimens.KEYLINE_SMALL.toDouble())
-
-        HBox.setHgrow(revisionConfigurationPanel,Priority.ALWAYS)
-        HBox.setHgrow(partitionConfigurationPanel,Priority.ALWAYS)
     }
 
 
@@ -202,7 +208,7 @@ class Gui():Application()
         val vBox = VBox().apply()
         {
             VBox.setVgrow(topPanel,Priority.ALWAYS)
-            children.addAll(menuBar,topPanel,middlePanel,bottomPanel)
+            children.addAll(menuBar,topPanel,bottomPanel)
         }
 
         // configure the scene (inside the window)

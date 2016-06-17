@@ -6,6 +6,7 @@ import javafx.scene.Node
 import javafx.scene.control.ComboBox
 import javafx.scene.control.Label
 import javafx.scene.control.TextInputDialog
+import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import research2016.beliefrevisor.core.SentenceRevisionStrategy
 import research2016.beliefrevisor.core.TrustPartitionSentenceRevisionStrategy
@@ -137,8 +138,7 @@ class TrustPartitionConfigPanel:VBox()
         {
             init
             {
-                prefHeight = 100.0
-                minHeight = prefHeight
+                VBox.setVgrow(this,Priority.ALWAYS)
                 listView.items.addListener(InvalidationListener {listener?.invalidated(null)})
             }
 
@@ -213,8 +213,7 @@ class TrustPartitionConfigPanel:VBox()
         {
             init
             {
-                prefHeight = 100.0
-                minHeight = prefHeight
+                VBox.setVgrow(this,Priority.ALWAYS)
                 listView.items.addListener(InvalidationListener {listener?.invalidated(null)})
             }
 
