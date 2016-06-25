@@ -1,13 +1,12 @@
-package research2016.beliefrevisor.gui
+package com.github.ericytsang.research2016.beliefrevisor.gui
 
 import com.sun.javafx.collections.ObservableListWrapper
 import javafx.scene.control.ComboBox
-import research2016.propositionallogic.And
-import research2016.propositionallogic.Proposition
-import research2016.propositionallogic.makeFrom
-import research2016.propositionallogic.models
-import research2016.propositionallogic.toDnf
-import research2016.propositionallogic.toFullDnf
+import com.github.ericytsang.research2016.propositionallogic.And
+import com.github.ericytsang.research2016.propositionallogic.Proposition
+import com.github.ericytsang.research2016.propositionallogic.models
+import com.github.ericytsang.research2016.propositionallogic.toDnf
+import com.github.ericytsang.research2016.propositionallogic.toFullDnf
 
 /**
  * Created by surpl on 6/14/2016.

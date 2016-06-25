@@ -1,4 +1,4 @@
-package research2016.beliefrevisor.gui
+package com.github.ericytsang.research2016.beliefrevisor.gui
 
 internal object Dimens
 {

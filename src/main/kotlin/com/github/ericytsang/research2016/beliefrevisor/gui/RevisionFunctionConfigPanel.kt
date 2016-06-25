@@ -1,4 +1,4 @@
-package research2016.beliefrevisor.gui
+package com.github.ericytsang.research2016.beliefrevisor.gui
 
 import com.sun.javafx.collections.ObservableListWrapper
 import javafx.application.Platform
@@ -14,20 +14,20 @@ import javafx.scene.control.Label
 import javafx.scene.control.TextInputDialog
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
-import lib.collections.getRandom
-import research2016.beliefrevisor.core.BeliefRevisionStrategy
-import research2016.beliefrevisor.core.ComparatorBeliefRevisionStrategy
-import research2016.beliefrevisor.core.HammingDistanceComparator
-import research2016.beliefrevisor.core.OrderedSetsComparator
-import research2016.beliefrevisor.core.SatisfiabilityBeliefRevisionStrategy
-import research2016.beliefrevisor.core.WeightedHammingDistanceComparator
-import research2016.propositionallogic.Or
-import research2016.propositionallogic.Proposition
-import research2016.propositionallogic.State
-import research2016.propositionallogic.Variable
-import research2016.propositionallogic.generateFrom
-import research2016.propositionallogic.makeFrom
-import research2016.propositionallogic.toParsableString
+import com.github.ericytsang.lib.collections.getRandom
+import com.github.ericytsang.research2016.propositionallogic.BeliefRevisionStrategy
+import com.github.ericytsang.research2016.propositionallogic.ComparatorBeliefRevisionStrategy
+import com.github.ericytsang.research2016.propositionallogic.HammingDistanceComparator
+import com.github.ericytsang.research2016.propositionallogic.Or
+import com.github.ericytsang.research2016.propositionallogic.OrderedSetsComparator
+import com.github.ericytsang.research2016.propositionallogic.Proposition
+import com.github.ericytsang.research2016.propositionallogic.SatisfiabilityBeliefRevisionStrategy
+import com.github.ericytsang.research2016.propositionallogic.State
+import com.github.ericytsang.research2016.propositionallogic.Variable
+import com.github.ericytsang.research2016.propositionallogic.WeightedHammingDistanceComparator
+import com.github.ericytsang.research2016.propositionallogic.generateFrom
+import com.github.ericytsang.research2016.propositionallogic.makeFrom
+import com.github.ericytsang.research2016.propositionallogic.toParsableString
 import java.io.Serializable
 import java.util.Collections
 import java.util.Optional
@@ -141,7 +141,7 @@ class RevisionFunctionConfigPanel():VBox()
         {
             init
             {
-                VBox.setVgrow(this,Priority.ALWAYS)
+                setVgrow(this,Priority.ALWAYS)
             }
 
             override fun tryParseInput(inputDialog:TextInputDialog):Mapping
@@ -234,7 +234,7 @@ class RevisionFunctionConfigPanel():VBox()
         {
             init
             {
-                VBox.setVgrow(this,Priority.ALWAYS)
+                setVgrow(this,Priority.ALWAYS)
             }
 
             override fun tryParseInput(inputDialog:Alert):List<Proposition>

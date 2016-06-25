@@ -1,10 +1,10 @@
-package research2016.beliefrevisor.gui
+package com.github.ericytsang.research2016.beliefrevisor.gui
 
 import javafx.scene.control.Label
 import javafx.scene.control.ListView
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
-import research2016.propositionallogic.Proposition
+import com.github.ericytsang.research2016.propositionallogic.Proposition
 
 /**
  * the belief state output panel is a layout that displays a [List] of

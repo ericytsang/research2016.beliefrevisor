@@ -1,5 +1,6 @@
-package research2016.beliefrevisor.gui
+package com.github.ericytsang.research2016.beliefrevisor.gui
 
+import com.github.ericytsang.research2016.propositionallogic.PartitionedTrustSentenceRevisionStrategy
 import com.sun.javafx.collections.ObservableListWrapper
 import javafx.beans.InvalidationListener
 import javafx.scene.Node
@@ -8,17 +9,14 @@ import javafx.scene.control.Label
 import javafx.scene.control.TextInputDialog
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
-import research2016.beliefrevisor.core.SentenceRevisionStrategy
-import research2016.beliefrevisor.core.TrustPartitionSentenceRevisionStrategy
-import research2016.propositionallogic.Or
-import research2016.propositionallogic.Proposition
-import research2016.propositionallogic.Variable
-import research2016.propositionallogic.State
-import research2016.propositionallogic.Tautology
-import research2016.propositionallogic.generateFrom
-import research2016.propositionallogic.makeFrom
-import research2016.propositionallogic.not
-import research2016.propositionallogic.toParsableString
+import com.github.ericytsang.research2016.propositionallogic.Proposition
+import com.github.ericytsang.research2016.propositionallogic.SentenceRevisionStrategy
+import com.github.ericytsang.research2016.propositionallogic.Variable
+import com.github.ericytsang.research2016.propositionallogic.State
+import com.github.ericytsang.research2016.propositionallogic.generateFrom
+import com.github.ericytsang.research2016.propositionallogic.makeFrom
+import com.github.ericytsang.research2016.propositionallogic.tautology
+import com.github.ericytsang.research2016.propositionallogic.toParsableString
 import java.io.Serializable
 import java.util.Optional
 
@@ -115,7 +113,7 @@ class TrustPartitionConfigPanel:VBox()
         {
             override fun revise(sentence:Proposition):Proposition
             {
-                return Tautology
+                return tautology
             }
         }
     }
@@ -138,7 +136,7 @@ class TrustPartitionConfigPanel:VBox()
         {
             init
             {
-                VBox.setVgrow(this,Priority.ALWAYS)
+                setVgrow(this,Priority.ALWAYS)
                 listView.items.addListener(InvalidationListener {listener?.invalidated(null)})
             }
 
@@ -198,7 +196,7 @@ class TrustPartitionConfigPanel:VBox()
             if (states.isNotEmpty())
             {
                 val partitions = states.map {Proposition.makeFrom(it)}.toSet()
-                return TrustPartitionSentenceRevisionStrategy(partitions)
+                return PartitionedTrustSentenceRevisionStrategy(partitions)
             }
             else
             {
@@ -213,7 +211,7 @@ class TrustPartitionConfigPanel:VBox()
         {
             init
             {
-                VBox.setVgrow(this,Priority.ALWAYS)
+                setVgrow(this,Priority.ALWAYS)
                 listView.items.addListener(InvalidationListener {listener?.invalidated(null)})
             }
 
@@ -239,7 +237,7 @@ class TrustPartitionConfigPanel:VBox()
             val partitions = settingsPanel.listView.items.toSet()
             if (partitions.isNotEmpty())
             {
-                return TrustPartitionSentenceRevisionStrategy(partitions)
+                return PartitionedTrustSentenceRevisionStrategy(partitions)
             }
             else
             {

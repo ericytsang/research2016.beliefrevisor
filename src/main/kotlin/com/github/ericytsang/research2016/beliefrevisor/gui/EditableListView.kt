@@ -1,4 +1,4 @@
-package research2016.beliefrevisor.gui
+package com.github.ericytsang.research2016.beliefrevisor.gui
 
 import javafx.beans.InvalidationListener
 import javafx.event.EventHandler
@@ -107,7 +107,7 @@ abstract class EditableListView<Model,InputDialog:Dialog<ResultType>,ResultType>
             event ->
             when (event.code)
             {
-                // allow deletion of entries by pressing delete or backspace
+            // allow deletion of entries by pressing delete or backspace
                 in setOf(KeyCode.DELETE,KeyCode.BACK_SPACE) ->
                 {
                     // try to remove the entry from the list
@@ -125,13 +125,13 @@ abstract class EditableListView<Model,InputDialog:Dialog<ResultType>,ResultType>
                     }
                 }
 
-                // allow addition of entries by pressing enter
+            // allow addition of entries by pressing enter
                 KeyCode.ENTER ->
                 {
                     addNewEntry(focusModel.focusedIndex+1)
                 }
 
-                // allow insertion of entries by pressing insert
+            // allow insertion of entries by pressing insert
                 KeyCode.INSERT ->
                 {
                     if (focusModel.focusedIndex in items.indices)
@@ -144,7 +144,9 @@ abstract class EditableListView<Model,InputDialog:Dialog<ResultType>,ResultType>
                     }
                 }
 
-                else -> {/* do nothing */}
+                else ->
+                {/* do nothing */
+                }
             }
         }
     }
@@ -274,6 +276,6 @@ abstract class EditableListView<Model,InputDialog:Dialog<ResultType>,ResultType>
 
         spacing = Dimens.KEYLINE_SMALL.toDouble()
         children.addAll(listView,buttons)
-        VBox.setVgrow(listView,Priority.ALWAYS)
+        setVgrow(listView,Priority.ALWAYS)
     }
 }

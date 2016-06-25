@@ -1,4 +1,4 @@
-package research2016.beliefrevisor.gui
+package com.github.ericytsang.research2016.beliefrevisor.gui
 
 import com.sun.javafx.collections.ObservableListWrapper
 import javafx.application.Application
@@ -16,7 +16,7 @@ import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
 import javafx.stage.FileChooser
 import javafx.stage.Stage
-import research2016.propositionallogic.Proposition
+import com.github.ericytsang.research2016.propositionallogic.Proposition
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable

@@ -1,12 +1,12 @@
-package research2016.beliefrevisor.gui
+package com.github.ericytsang.research2016.beliefrevisor.gui
 
 import javafx.scene.control.Label
 import javafx.scene.control.TextInputDialog
 import javafx.scene.layout.Priority
 import javafx.scene.layout.VBox
-import research2016.propositionallogic.Proposition
-import research2016.propositionallogic.makeFrom
-import research2016.propositionallogic.toParsableString
+import com.github.ericytsang.research2016.propositionallogic.Proposition
+import com.github.ericytsang.research2016.propositionallogic.makeFrom
+import com.github.ericytsang.research2016.propositionallogic.toParsableString
 import java.util.Optional
 
 /**
@@ -59,6 +59,6 @@ class RevisionInputSentencePanel:VBox()
     {
         spacing = Dimens.KEYLINE_SMALL.toDouble()
         children.addAll(Label(LABEL_TEXT),listView,displayModeComboBox)
-        VBox.setVgrow(listView,Priority.ALWAYS)
+        setVgrow(listView,Priority.ALWAYS)
     }
 }

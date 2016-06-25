@@ -1,4 +1,4 @@
-package research2016.beliefrevisor
+package com.github.ericytsang.research2016.beliefrevisor
 
 import javafx.application.Application
 import javafx.scene.control.Alert
@@ -40,6 +40,6 @@ class AlertDialogTests:Application()
     @Test
     fun canUseSameNodeOnDifferentInstancesOfAlertDialogsShownAtDifferentTimes()
     {
-        Application.launch(AlertDialogTests::class.java)
+        launch(AlertDialogTests::class.java)
     }
 }
