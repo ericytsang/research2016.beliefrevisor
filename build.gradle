@@ -38,6 +38,6 @@ task executable(type: Jar, dependsOn: classes) {
         exclude "META-INF/*.RSA"
     }
     manifest {
-        attributes 'Main-Class': 'research2016.beliefrevisor.gui.MainKt'
+        attributes 'Main-Class': 'com.github.ericytsang.research2016.beliefrevisor.gui.MainKt'
     }
 }
