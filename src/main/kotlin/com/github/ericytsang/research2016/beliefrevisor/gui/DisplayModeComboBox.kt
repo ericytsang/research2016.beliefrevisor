@@ -4,7 +4,6 @@ import com.sun.javafx.collections.ObservableListWrapper
 import javafx.scene.control.ComboBox
 import com.github.ericytsang.research2016.propositionallogic.And
 import com.github.ericytsang.research2016.propositionallogic.Proposition
-import com.github.ericytsang.research2016.propositionallogic.models
 import com.github.ericytsang.research2016.propositionallogic.toDnf
 import com.github.ericytsang.research2016.propositionallogic.toFullDnf
 
@@ -23,7 +22,7 @@ class DisplayModeComboBox:ComboBox<DisplayModeComboBox.Option>()
             val cnfOption = Option("Disjunctive Normal Form",{it.map {it.toDnf().toString()}})
             val fullDnfOption = Option("Full Disjunctive Normal Form",{it.map {it.toFullDnf().toString()}})
             val defaultOption = Option("Default",{it.map {it.toString()}})
-            val modelsOption = Option("Models",{if (it.isNotEmpty()) And.make(it).models.map {it.toString()} else emptyList()})
+            val modelsOption = Option("Models",{And.make(it)?.models?.map {it.toString()} ?: emptyList()})
             return@run listOf(defaultOption,modelsOption,cnfOption,fullDnfOption)
         }
     }

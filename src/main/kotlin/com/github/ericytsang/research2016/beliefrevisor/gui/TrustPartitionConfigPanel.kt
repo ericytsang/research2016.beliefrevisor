@@ -13,7 +13,6 @@ import com.github.ericytsang.research2016.propositionallogic.Proposition
 import com.github.ericytsang.research2016.propositionallogic.SentenceRevisionStrategy
 import com.github.ericytsang.research2016.propositionallogic.Variable
 import com.github.ericytsang.research2016.propositionallogic.State
-import com.github.ericytsang.research2016.propositionallogic.generateFrom
 import com.github.ericytsang.research2016.propositionallogic.makeFrom
 import com.github.ericytsang.research2016.propositionallogic.tautology
 import com.github.ericytsang.research2016.propositionallogic.toParsableString
@@ -115,6 +114,8 @@ class TrustPartitionConfigPanel:VBox()
             {
                 return tautology
             }
+            override fun hashCode():Int = 0
+            override fun equals(other:Any?):Boolean = other === this
         }
     }
 
@@ -127,6 +128,8 @@ class TrustPartitionConfigPanel:VBox()
             {
                 return sentence
             }
+            override fun hashCode():Int = 0
+            override fun equals(other:Any?):Boolean = other === this
         }
     }
 
@@ -142,7 +145,7 @@ class TrustPartitionConfigPanel:VBox()
 
             override fun tryParseInput(inputDialog:TextInputDialog):Variable
             {
-                return Variable.make(inputDialog.result)
+                return Variable.fromString(inputDialog.result)
             }
 
             override fun makeInputDialog(model:Variable?):TextInputDialog
@@ -192,10 +195,10 @@ class TrustPartitionConfigPanel:VBox()
         override val sentenceRevisionStrategy:SentenceRevisionStrategy? get()
         {
             val variables = settingsPanel.listView.items.toSet()
-            val states = State.generateFrom(variables)
+            val states = State.permutationsOf(variables)
             if (states.isNotEmpty())
             {
-                val partitions = states.map {Proposition.makeFrom(it)}.toSet()
+                val partitions = states.map {Proposition.fromState(it)}.toSet()
                 return PartitionedTrustSentenceRevisionStrategy(partitions)
             }
             else
